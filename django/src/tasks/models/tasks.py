@@ -1,4 +1,5 @@
 import uuid
+import random
 
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -9,7 +10,6 @@ from app.models import DefaultModel, TimestampedModel
 
 
 class TaskUser(TimestampedModel):
-    # user = models.ForeignKey('users.User', on_delete=models.CASCADE)
     public_id = models.UUIDField() # editable=False
 
     role = models.CharField(max_length=100)
@@ -21,9 +21,34 @@ class TaskUser(TimestampedModel):
 
 
 class Task(TimestampedModel):
+    public_id = models.UUIDField(editable=False, default=uuid.uuid4())
+
     title = models.CharField(max_length=100)
     description = models.TextField()
-    user = models.ForeignKey(TaskUser, on_delete=models.CASCADE)
+    user = models.ForeignKey(TaskUser, on_delete=models.CASCADE, blank=False, null=False)
+
+    cost_assign = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=random.randint(1000, 2000) / 100,
+        blank=False, null=False,
+    )
+    cost_complete = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=random.randint(2000, 4000) / 100,
+        blank=False, null=False,
+    )
+
+    class Status(models.TextChoices):
+        ASSIGNED = 'ASSIGNED', _('Assigned')
+        COMPLETED = 'COMPLETED', _('Completed')
+
+    status = models.CharField(
+        default=Status.ASSIGNED,
+        choices=Status.choices,
+        max_length=100,
+    )
 
     def __str__(self):
         return self.title
@@ -31,7 +56,16 @@ class Task(TimestampedModel):
 
 class TaskCost(TimestampedModel):
     task = models.ForeignKey(Task, on_delete=models.CASCADE)
-    cost = models.DecimalField(max_digits=10, decimal_places=2)
+    cost_assign = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=random.randint(1000, 2000) / 100
+    )
+    cost_complete = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=random.randint(2000, 4000) / 100
+    )
 
     def __str__(self):
         return f'{self.task.title} - {self.cost}'
@@ -42,12 +76,12 @@ class TaskStatus(TimestampedModel):
         ASSIGNED = 'ASSIGNED', _('Assigned')
         COMPLETED = 'COMPLETED', _('Completed')
 
-    task = models.ForeignKey(Task, on_delete=models.CASCADE)
     status = models.CharField(
+        default=Status.ASSIGNED,
         choices=Status.choices,
         max_length=100,
     )
+    task = models.ForeignKey(Task, on_delete=models.CASCADE)
 
     def __str__(self):
-
         return self.status
