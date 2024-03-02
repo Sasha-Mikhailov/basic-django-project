@@ -29,6 +29,7 @@ class Task(TimestampedModel):
         max_digits=10,
         decimal_places=2,
         default=random.randint(1000, 2000) / 100,
+        editable=False,
         blank=False, null=False,
     )
     cost_complete = models.DecimalField(

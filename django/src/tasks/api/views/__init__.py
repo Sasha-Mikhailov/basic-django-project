@@ -1,6 +1,6 @@
-from .tasks import TaskUserViewSet, TaskViewSet
+from .tasks import TaskViewSet
 
 __all__ = [
-    "TaskUserViewSet",
+    # "TaskUserViewSet",
     "TaskViewSet",
 ]
