@@ -6,8 +6,6 @@ from django.utils.translation import gettext_lazy as _
 
 from app.models import DefaultModel, TimestampedModel
 
-# Rename this file to singular form of your entity, e.g. "orders.py -> order.py". Add your class to __init__.py.
-
 
 class TaskUser(TimestampedModel):
     public_id = models.UUIDField() # editable=False
@@ -54,6 +52,7 @@ class Task(TimestampedModel):
         return self.title
 
 
+# FIXME failed to implement creation within Task model/serializer
 class TaskCost(TimestampedModel):
     task = models.ForeignKey(Task, on_delete=models.CASCADE)
     cost_assign = models.DecimalField(
@@ -71,6 +70,7 @@ class TaskCost(TimestampedModel):
         return f'{self.task.title} - {self.cost}'
 
 
+# FIXME failed to implement creation within Task model/serializer
 class TaskStatus(TimestampedModel):
     class Status(models.TextChoices):
         ASSIGNED = 'ASSIGNED', _('Assigned')

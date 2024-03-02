@@ -24,9 +24,10 @@ class TaskViewSet(viewsets.ModelViewSet):
     """
     queryset = Task.objects.all().order_by('-created')
     serializer_class = TaskSerializer
-    # permission_classes = [permissions.IsAuthenticated]
+    # FIXME change to IsAuthenticated
     permission_classes = [permissions.AllowAny]
 
+    # FIXME change permissions to IsAdmin
     @action(detail=False, methods=['post'], url_path='reassign', url_name='reassign', permission_classes=[permissions.AllowAny])
     def reassign_tasks(self, request):
         """
@@ -42,6 +43,7 @@ class TaskViewSet(viewsets.ModelViewSet):
         if len(worker_users) == 0:
             return Response({'status': 'No users with role=worker available; can\'t reassign tasks'})
 
+        # TODO use bulk update here
         for task in tasks_in_progress:
             task.user = worker_users[random.randint(0, len(worker_users) - 1)]
             task.save()
