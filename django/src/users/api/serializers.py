@@ -1,7 +1,12 @@
 from rest_framework import serializers
 
-from users.models import User
+from app.settings import Topics
 
+from users.models import User
+from tasks.producer import Producer
+
+
+p = Producer()
 
 class UserSerializer(serializers.ModelSerializer):
     remote_addr = serializers.SerializerMethodField()
@@ -23,6 +28,7 @@ class UserSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = User.objects.create_user(**validated_data)
 
+        p.produce(Topics.users_stream, 'user-created', super(user))
         print(super(user))
 
         return user
@@ -31,6 +37,9 @@ class UserSerializer(serializers.ModelSerializer):
         super().update(instance, validated_data)
         user = User.update_or_create(**instance.data)
 
+        p.produce(Topics.users_stream, 'user-updated', super(user))
         print(super(user))
+
+        # TODO add business event with role change
 
         return user
