@@ -1,33 +1,18 @@
-import enum
 import logging
-
-from app.settings import DEBUG
 
 from confluent_kafka import Producer as KafkaProducer, KafkaError
 
+from app.settings import DEBUG, KAFKA_HOST
+
 logger = logging.getLogger(__name__)
 
-stdout = logger.info if DEBUG else print
-
-
-class Topics:
-    """
-    list of available topics to produce and consume
-    """
-
-    # tasks: CUD events
-    tasks_stream = 'tasks-stream'
-    # tasks: business events
-    tasks = 'tasks'
-
-    # users: CUD events
-    users_stream = 'users-stream'
+stdout = print if DEBUG else logger.info
 
 
 class Producer:
     def __init__(self):
         self.conf = {
-            'bootstrap.servers': 'localhost:9092',
+            'bootstrap.servers': KAFKA_HOST,
         }
         self.producer = KafkaProducer(self.conf)
 

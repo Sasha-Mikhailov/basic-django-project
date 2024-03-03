@@ -3,7 +3,7 @@ import json
 
 from confluent_kafka import Consumer as KafkaConsumer
 
-from app.settings import DEBUG
+from app.settings import DEBUG, KAFKA_HOST
 
 
 logger = logging.getLogger(__name__)
@@ -13,7 +13,7 @@ stdout = logger.info if DEBUG else print
 
 class Consumer:
     conf = {
-        'bootstrap.servers': 'localhost:9092',
+        'bootstrap.servers': KAFKA_HOST,
         'group.id': 'python_example_group_1',
         'auto.offset.reset': 'earliest'
     }
