@@ -9,9 +9,20 @@ logger = logging.getLogger(__name__)
 
 stdout = logger.info if DEBUG else print
 
+
 class Topics:
+    """
+    list of available topics to produce and consume
+    """
+
+    # tasks: CUD events
     tasks_stream = 'tasks-stream'
+    # tasks: business events
     tasks = 'tasks'
+
+    # users: CUD events
+    users_stream = 'users-stream'
+
 
 class Producer:
     def __init__(self):

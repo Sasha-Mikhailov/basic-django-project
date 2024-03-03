@@ -8,7 +8,7 @@ from app.models import DefaultModel, TimestampedModel
 
 
 class TaskUser(TimestampedModel):
-    public_id = models.UUIDField() # editable=False
+    public_id = models.UUIDField(unique=True) # editable=False
 
     role = models.CharField(max_length=100)
     first_name = models.CharField(max_length=100)
