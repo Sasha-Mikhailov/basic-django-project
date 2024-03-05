@@ -15,7 +15,7 @@ total_count = 0
 
 try:
     while True:
-        msg = consumer.poll(1.0)
+        msg = consumer.poll(timeout_ms=1.0, max_records=200)
         if msg is None:
             # No message available within timeout.
             # Initial message consumption may take up to
@@ -29,20 +29,28 @@ try:
         else:
             # Check for Kafka message
             record_key, record_data = consumer.parse(msg)
-            # do not 'import' other db internal ids (just in case)
-            _ = record_data.pop('id')
 
             print(f'consumed message with key {record_key} and value {record_data}')
 
-            # TODO create or update user by public_id
-            if record_key == 'user-created':
-                user = TaskUser.objects.update_or_create(**record_data)
+            payload = record_key.get('payload', {})
+
+            if record_key == 'users.user-created':
+                user = TaskUser.objects.update_or_create(
+                    public_id=payload['public_id'],
+                    role=payload['user_role'],
+                    first_name=payload['first_name'],
+                    last_name=payload['last_name'],
+                )
                 print(f'created user {TaskUserSerializer(user)}')
-            elif record_key == 'user-updated':
-                user = TaskUser.objects.filter(public_id=record_data['public_id']).update(**record_data)
+            elif record_key == 'users.user-updated':
+                user = TaskUser.objects.filter(public_id=payload['public_id']).update(
+                    role=payload['user_role'],
+                    first_name=payload['first_name'],
+                    last_name=payload['last_name'],
+                )
                 print(f'updated user {TaskUserSerializer(user)}')
             else:
-                print(f'ignoring message with key {record_key}')
+                print(f'ignoring message with key `{record_key}` and payload `{payload}`')
 
 except KeyboardInterrupt:
     pass

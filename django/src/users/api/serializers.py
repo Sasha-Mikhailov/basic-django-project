@@ -40,6 +40,8 @@ class UserSerializer(serializers.ModelSerializer):
             "payload": {
                 "public_id": str(user.public_id),
                 "username": str(user.username),
+                "first_name": str(user.first_name),
+                "last_name": str(user.last_name),
                 "user_role": str(user.role),
             },
         }
@@ -59,8 +61,11 @@ class UserSerializer(serializers.ModelSerializer):
             "event_id": uuid.uuid4(),
             # TODO add version, name, time, producer
             "payload": {
+                # TODO send only changed fields?
                 "public_id": str(user.public_id),
                 "username": str(user.username),
+                "first_name": str(user.first_name),
+                "last_name": str(user.last_name),
                 "user_role": str(user.role),
             },
         }
