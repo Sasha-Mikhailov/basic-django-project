@@ -1,3 +1,5 @@
+import uuid
+
 from rest_framework import serializers
 
 from app.settings import Topics
@@ -10,6 +12,7 @@ p = Producer()
 
 class UserSerializer(serializers.ModelSerializer):
     remote_addr = serializers.SerializerMethodField()
+    password = serializers.CharField(write_only=True, required=True)
 
     class Meta:
         model = User
@@ -20,6 +23,9 @@ class UserSerializer(serializers.ModelSerializer):
             "last_name",
             "email",
             "remote_addr",
+            "public_id",
+            "role",
+            "password",
         ]
 
     def get_remote_addr(self, obj: User) -> str:
@@ -28,8 +34,16 @@ class UserSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = User.objects.create_user(**validated_data)
 
-        p.produce(Topics.users_stream, 'users.user-created', super(user))
-        print(super(user))
+        event = {
+            "event_id": uuid.uuid4(),
+            # TODO add version, name, time, producer
+            "payload": {
+                "public_id": str(user.public_id),
+                "username": str(user.username),
+                "user_role": str(user.role),
+            },
+        }
+        p.produce(Topics.users_stream, 'users.user-created', event)
 
         return user
 
@@ -41,11 +55,28 @@ class UserSerializer(serializers.ModelSerializer):
         user = User.update_or_create(**instance.data)
 
         # TODO think about bulk update
-        # TODO add meta and payload
-        p.produce(Topics.users_stream, 'users.user-updated', super(user))
-        print(super(user))
+        event = {
+            "event_id": uuid.uuid4(),
+            # TODO add version, name, time, producer
+            "payload": {
+                "public_id": str(user.public_id),
+                "username": str(user.username),
+                "user_role": str(user.role),
+            },
+        }
+        p.produce(Topics.users_stream, 'users.user-updated', event)
+        # print(validated_data)
 
         if old_role != new_role:
-            p.produce(Topics.users, 'users.user-role-changed', super(user))
+            event = {
+                "event_id": uuid.uuid4(),
+                # TODO add version, name, time, producer
+                "payload": {
+                    "public_id": str(user.public_id),
+                    "old_user_role": str(old_role),
+                    "new_user_role": str(new_role),
+                },
+            }
+            p.produce(Topics.users, 'users.user-role-changed', instance.data)
 
         return user
