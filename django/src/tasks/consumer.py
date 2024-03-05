@@ -3,7 +3,7 @@ import json
 
 from confluent_kafka import Consumer as KafkaConsumer
 
-from app.settings import DEBUG, KAFKA_HOST
+from app.settings import DEBUG, KAFKA_HOST, KAFKA_DRY_RUN
 
 
 logger = logging.getLogger(__name__)
@@ -17,20 +17,24 @@ class Consumer:
         'group.id': 'python_example_group_1',
         'auto.offset.reset': 'earliest'
     }
-    def __init__(self, conf: dict=None, topics: list[str]= None):
+    def __init__(self, conf: dict=None, topics: list[str]= None, dry_run: bool=None):
         self.conf = conf or self.conf
-        self.consumer = KafkaConsumer(conf)
         self.counts = {}
+        self.dry_run = dry_run or KAFKA_DRY_RUN
 
-        if topics:
-            self.subscribe(topics)
+        if not self.dry_run:
+            self.consumer = KafkaConsumer(conf)
+
+            if topics :
+                self.subscribe(topics)
 
     def subscribe(self, topics: list[str]):
         self.counts.update = {
             topic_name: 0 for topic_name in topics
             if topic_name not in self.counts
         }
-        self.consumer.subscribe(topics)
+        if not self.dry_run:
+            self.consumer.subscribe(topics)
 
     def poll(self, timeout:float=1.0):
         return self.consumer.poll(timeout)
