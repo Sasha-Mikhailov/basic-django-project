@@ -15,3 +15,6 @@ class Topics:
 
     # users: CUD events
     users_stream = 'users-stream'
+    # users: business events
+    users = 'users'
+

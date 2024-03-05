@@ -34,6 +34,9 @@ class UserSerializer(serializers.ModelSerializer):
         return user
 
     def update(self, instance, validated_data):
+        old_role = instance.role
+        new_role = validated_data.get('role', old_role)
+
         super().update(instance, validated_data)
         user = User.update_or_create(**instance.data)
 
@@ -42,6 +45,7 @@ class UserSerializer(serializers.ModelSerializer):
         p.produce(Topics.users_stream, 'users.user-updated', super(user))
         print(super(user))
 
-        # TODO add business event with role change
+        if old_role != new_role:
+            p.produce(Topics.users, 'users.user-role-changed', super(user))
 
         return user
