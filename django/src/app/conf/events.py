@@ -1,6 +1,7 @@
 KAFKA_HOST = 'localhost:9092'
 
 
+# TODO think about topic naming (feedback)
 class Topics:
     """
     list of available topics to produce and consume

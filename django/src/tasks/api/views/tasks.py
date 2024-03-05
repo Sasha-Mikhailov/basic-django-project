@@ -47,7 +47,7 @@ class TaskViewSet(viewsets.ModelViewSet):
 
         serializer.save(user=user)
         # CUD event: task created
-        p.produce(topic=Topics.tasks_stream, key='task-created', value=json.dumps(serializer.data))
+        p.produce(topic=Topics.tasks_stream, key='tasks.task-created', value=json.dumps(serializer.data))
 
     def perform_update(self, serializer):
         initial_status = serializer.instance.status
@@ -56,7 +56,7 @@ class TaskViewSet(viewsets.ModelViewSet):
         serializer.save(**serializer.validated_data)
         if initial_status != new_status:
             # business event: status changed
-            p.produce(topic=Topics.tasks, key='task-status-updated', value=json.dumps(serializer.data))
+            p.produce(topic=Topics.tasks, key='tasks.task-status-updated', value=json.dumps(serializer.data))
 
     # FIXME change permissions to IsAdmin
     @action(detail=False, methods=['post'], url_path='reassign', url_name='reassign', permission_classes=[permissions.AllowAny])

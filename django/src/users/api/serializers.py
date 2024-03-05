@@ -28,7 +28,7 @@ class UserSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = User.objects.create_user(**validated_data)
 
-        p.produce(Topics.users_stream, 'user-created', super(user))
+        p.produce(Topics.users_stream, 'users.user-created', super(user))
         print(super(user))
 
         return user
@@ -37,7 +37,9 @@ class UserSerializer(serializers.ModelSerializer):
         super().update(instance, validated_data)
         user = User.update_or_create(**instance.data)
 
-        p.produce(Topics.users_stream, 'user-updated', super(user))
+        # TODO think about bulk update
+        # TODO add meta and payload
+        p.produce(Topics.users_stream, 'users.user-updated', super(user))
         print(super(user))
 
         # TODO add business event with role change
