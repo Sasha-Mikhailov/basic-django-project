@@ -1,13 +1,9 @@
-import json
-
 from confluent_kafka import KafkaError
 
-from app.models import TaskUser
-from app.serializers import TaskUserSerializer
-
 from app.consumer import Consumer
+from app.models import TaskUser
 from app.producer import Topics
-
+from app.serializers import TaskUserSerializer
 
 consumer = Consumer()
 consumer.subscribe([Topics.users_stream])
@@ -24,33 +20,33 @@ try:
             print("Waiting for message or event/error in poll()")
             continue
         elif msg.error():
-            print('error: {}'.format(msg.error()))
+            print("error: {}".format(msg.error()))
             raise KafkaError(msg.error())
         else:
             # Check for Kafka message
             record_key, record_data = consumer.parse(msg)
 
-            print(f'consumed message with key {record_key} and value {record_data}')
+            print(f"consumed message with key {record_key} and value {record_data}")
 
-            payload = record_key.get('payload', {})
+            payload = record_key.get("payload", {})
 
-            if record_key == 'users.user-created':
+            if record_key == "users.user-created":
                 user = TaskUser.objects.update_or_create(
-                    public_id=payload['public_id'],
-                    role=payload['user_role'],
-                    first_name=payload['first_name'],
-                    last_name=payload['last_name'],
+                    public_id=payload["public_id"],
+                    role=payload["user_role"],
+                    first_name=payload["first_name"],
+                    last_name=payload["last_name"],
                 )
-                print(f'created user {TaskUserSerializer(user)}')
-            elif record_key == 'users.user-updated':
-                user = TaskUser.objects.filter(public_id=payload['public_id']).update(
-                    role=payload['user_role'],
-                    first_name=payload['first_name'],
-                    last_name=payload['last_name'],
+                print(f"created user {TaskUserSerializer(user)}")
+            elif record_key == "users.user-updated":
+                user = TaskUser.objects.filter(public_id=payload["public_id"]).update(
+                    role=payload["user_role"],
+                    first_name=payload["first_name"],
+                    last_name=payload["last_name"],
                 )
-                print(f'updated user {TaskUserSerializer(user)}')
+                print(f"updated user {TaskUserSerializer(user)}")
             else:
-                print(f'ignoring message with key `{record_key}` and payload `{payload}`')
+                print(f"ignoring message with key `{record_key}` and payload `{payload}`")
 
 except KeyboardInterrupt:
     pass

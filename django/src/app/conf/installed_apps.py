@@ -5,6 +5,7 @@ APPS = [
     "a12n",
     "users",
     "tasks",
+    "billing",
 ]
 
 THIRD_PARTY_APPS = [

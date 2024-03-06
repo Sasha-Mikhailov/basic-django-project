@@ -4,12 +4,11 @@ import uuid
 from rest_framework import serializers
 
 from app.settings import Topics
-
-from users.models import User
 from tasks.producer import Producer
-
+from users.models import User
 
 p = Producer()
+
 
 class UserSerializer(serializers.ModelSerializer):
     remote_addr = serializers.SerializerMethodField()
@@ -49,13 +48,13 @@ class UserSerializer(serializers.ModelSerializer):
                 "user_role": str(user.role),
             },
         }
-        p.produce(Topics.users_stream, event['event_name'], event)
+        p.produce(Topics.users_stream, event["event_name"], event)
 
         return user
 
     def update(self, instance, validated_data):
         old_role = instance.role
-        new_role = validated_data.get('role', old_role)
+        new_role = validated_data.get("role", old_role)
 
         super().update(instance, validated_data)
         user = User.update_or_create(**instance.data)
@@ -75,7 +74,7 @@ class UserSerializer(serializers.ModelSerializer):
                 "user_role": str(user.role),
             },
         }
-        p.produce(Topics.users_stream, event['event_name'], event)
+        p.produce(Topics.users_stream, event["event_name"], event)
         # print(validated_data)
 
         if old_role != new_role:
@@ -91,6 +90,6 @@ class UserSerializer(serializers.ModelSerializer):
                     "new_user_role": str(new_role),
                 },
             }
-            p.produce(Topics.users, event['event_name'], event)
+            p.produce(Topics.users, event["event_name"], event)
 
         return user
