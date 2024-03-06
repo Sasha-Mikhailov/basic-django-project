@@ -7,6 +7,10 @@
 --index-url https://artifactory.klarna.net/artifactory/api/pypi/r-pypi-pypi-org/simple
 --extra-index-url https://artifactory.klarna.net/artifactory/api/pypi/v-pypi-production/simple/
 
+aiofiles==23.2.1
+    # via python-schema-registry-client
+anyio==4.3.0
+    # via httpx
 appnope==0.1.3
     # via ipython
 asgiref==3.7.2
@@ -37,6 +41,8 @@ black==23.11.0
 certifi==2023.11.17
     # via
     #   django-healthchecks
+    #   httpcore
+    #   httpx
     #   requests
     #   sentry-sdk
 cffi==1.16.0
@@ -52,6 +58,8 @@ click-default-group==1.2.4
     # via dotenv-linter
 cognitive-complexity==1.3.0
     # via flake8-cognitive-complexity
+confluent-kafka==2.3.0
+    # via django (pyproject.toml)
 cryptography==41.0.5
     # via pyjwt
 decorator==5.1.1
@@ -112,12 +120,15 @@ eradicate==2.3.0
     # via flake8-eradicate
 exceptiongroup==1.2.0
     # via
+    #   anyio
     #   ipython
     #   pytest
 executing==2.0.1
     # via stack-data
 faker==12.0.1
     # via mixer
+fastavro==1.9.4
+    # via python-schema-registry-client
 flake8==6.1.0
     # via
     #   flake8-absolute-import
@@ -180,8 +191,17 @@ freezegun==1.2.2
     # via
     #   django (pyproject.toml)
     #   pytest-freezegun
+h11==0.14.0
+    # via httpcore
+httpcore==1.0.4
+    # via httpx
+httpx==0.26.0
+    # via python-schema-registry-client
 idna==3.4
-    # via requests
+    # via
+    #   anyio
+    #   httpx
+    #   requests
 inflection==0.5.1
     # via drf-spectacular
 iniconfig==2.0.0
@@ -195,7 +215,9 @@ jedi==0.19.1
     #   django (pyproject.toml)
     #   ipython
 jsonschema==4.20.0
-    # via drf-spectacular
+    # via
+    #   drf-spectacular
+    #   python-schema-registry-client
 jsonschema-specifications==2023.11.1
     # via jsonschema
 lazy-object-proxy==1.9.0
@@ -281,6 +303,8 @@ python-dateutil==2.8.2
     # via
     #   faker
     #   freezegun
+python-schema-registry-client==2.5.6
+    # via django (pyproject.toml)
 pytz==2023.3.post1
     # via djangorestframework
 pyyaml==6.0.1
@@ -305,6 +329,10 @@ six==1.16.0
     # via
     #   asttokens
     #   python-dateutil
+sniffio==1.3.1
+    # via
+    #   anyio
+    #   httpx
 sqlparse==0.4.4
     # via django
 stack-data==0.6.3
@@ -337,6 +365,7 @@ types-requests==2.31.0.10
     # via djangorestframework-stubs
 typing-extensions==4.9.0
     # via
+    #   anyio
     #   asgiref
     #   astroid
     #   black

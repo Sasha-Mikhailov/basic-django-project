@@ -21,6 +21,8 @@ dependencies = [
     "sentry-sdk",
     "Pillow",
     "psycopg2-binary",
+    "confluent_kafka",
+    "python-schema-registry-client",
 ]
 
 
