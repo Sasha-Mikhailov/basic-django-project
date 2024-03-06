@@ -1,5 +1,7 @@
 import random
 import json
+import uuid
+from datetime import datetime
 
 from rest_framework import permissions, viewsets
 from rest_framework.decorators import action
@@ -46,20 +48,51 @@ class TaskViewSet(viewsets.ModelViewSet):
             user = TaskUser.objects.get(**user_data)
 
         serializer.save(user=user)
+
+        event = {
+            "event_id": uuid.uuid4(),
+            "event_version": "1",
+            "event_name": "tasks.task-created",
+            "event_time": datetime.now().isoformat(),
+            "producer": "tasks-service",
+            "payload": {
+                "public_id": str(serializer.data['public_id']),
+                "title": str(serializer.data['title']),
+                "description": str(serializer.data['description']),
+                "assignee_public_id": str(user.public_id),
+                "cost_assigned": str(serializer.data['cost_assigned']),
+                "cost_completed": str(serializer.data['cost_completed']),
+                "status": str(serializer.data['status']),
+            },
+        }
+
         # CUD event: task created
-        p.produce(topic=Topics.tasks_stream, key='tasks.task-created', value=json.dumps(serializer.data))
+        p.produce(topic=Topics.tasks_stream, key=event['event_name'], value=event)
 
     def perform_update(self, serializer):
-        initial_status = serializer.instance.status
-        new_status = serializer.validated_data.get('status', initial_status)
+        old_status = serializer.instance.status
+        new_status = serializer.validated_data.get('status', old_status)
 
         serializer.save(**serializer.validated_data)
-        if initial_status != new_status:
-            # business event: status changed
-            p.produce(topic=Topics.tasks, key='tasks.task-status-updated', value=json.dumps(serializer.data))
+        if old_status != new_status:
 
-    # FIXME change permissions to IsAdmin
-    @action(detail=False, methods=['post'], url_path='reassign', url_name='reassign', permission_classes=[permissions.AllowAny])
+            event = {
+                "event_id": uuid.uuid4(),
+                "event_version": "1",
+                "event_name": "tasks.task-status-updated",
+                "event_time": datetime.now().isoformat(),
+                "producer": "tasks-service",
+                "payload": {
+                    "public_id": str(serializer.data['public_id']),
+                    "old_status": str(old_status),
+                    "new_status": str(new_status),
+                },
+            }
+
+            # business event: status changed
+            p.produce(topic=Topics.tasks, key=event['event_name'], value=event)
+
+    @action(detail=False, methods=['post'], url_path='reassign', url_name='reassign', permission_classes=[permissions.IsAdminUser])
     def reassign_tasks(self, request):
         """
         get all tasks in progress and reassign them to a random worker
@@ -75,9 +108,8 @@ class TaskViewSet(viewsets.ModelViewSet):
         if len(worker_users) == 0:
             return Response({'status': 'No users with role=worker available; can\'t reassign tasks'})
 
-        # TODO use bulk update here
         for task in tasks_in_progress:
             task.user = worker_users[random.randint(0, len(worker_users) - 1)]
-            task.save()
+        tasks_in_progress.bulk_update(tasks_in_progress, ['user'])
 
         return Response({'status': f'{len(tasks_in_progress)} tasks reassigned'})

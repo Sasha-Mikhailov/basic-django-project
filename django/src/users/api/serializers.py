@@ -1,3 +1,4 @@
+from datetime import datetime
 import uuid
 
 from rest_framework import serializers
@@ -36,7 +37,10 @@ class UserSerializer(serializers.ModelSerializer):
 
         event = {
             "event_id": uuid.uuid4(),
-            # TODO add version, name, time, producer
+            "event_version": "1",
+            "event_name": "users.user-created",
+            "event_time": datetime.now().isoformat(),
+            "producer": "users-service",
             "payload": {
                 "public_id": str(user.public_id),
                 "username": str(user.username),
@@ -45,7 +49,7 @@ class UserSerializer(serializers.ModelSerializer):
                 "user_role": str(user.role),
             },
         }
-        p.produce(Topics.users_stream, 'users.user-created', event)
+        p.produce(Topics.users_stream, event['event_name'], event)
 
         return user
 
@@ -59,9 +63,11 @@ class UserSerializer(serializers.ModelSerializer):
         # TODO think about bulk update
         event = {
             "event_id": uuid.uuid4(),
-            # TODO add version, name, time, producer
+            "event_version": "1",
+            "event_name": "users.user-updated",
+            "event_time": datetime.now().isoformat(),
+            "producer": "users-service",
             "payload": {
-                # TODO send only changed fields?
                 "public_id": str(user.public_id),
                 "username": str(user.username),
                 "first_name": str(user.first_name),
@@ -69,19 +75,22 @@ class UserSerializer(serializers.ModelSerializer):
                 "user_role": str(user.role),
             },
         }
-        p.produce(Topics.users_stream, 'users.user-updated', event)
+        p.produce(Topics.users_stream, event['event_name'], event)
         # print(validated_data)
 
         if old_role != new_role:
             event = {
                 "event_id": uuid.uuid4(),
-                # TODO add version, name, time, producer
+                "event_version": "1",
+                "event_name": "users.user-role-changed",
+                "event_time": datetime.now().isoformat(),
+                "producer": "users-service",
                 "payload": {
                     "public_id": str(user.public_id),
                     "old_user_role": str(old_role),
                     "new_user_role": str(new_role),
                 },
             }
-            p.produce(Topics.users, 'users.user-role-changed', instance.data)
+            p.produce(Topics.users, event['event_name'], event)
 
         return user
