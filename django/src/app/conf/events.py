@@ -1,8 +1,9 @@
 KAFKA_DRY_RUN = True
 KAFKA_HOST = "localhost:9092"
+KAFKA_REGISTRY_HOST = "localhost:8081"
 
 
-# TODO think about topic naming (feedback)
+# TODO think about topic naming (from the feedback)
 class Topics:
     """
     list of available topics to produce and consume

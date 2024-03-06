@@ -11,8 +11,9 @@ from app.settings import Topics
 from tasks.api.serializers import TaskSerializer
 from tasks.models import Task
 from tasks.models import TaskUser
-from tasks.producer import Producer
-from tasks.tests.mock import produce  # FIXME change for real kafka producer
+from kafka_app.producer import Producer
+from kafka_app.tests.mock import produce  # FIXME change for real kafka producer
+
 
 # FIXME users can't be created here, only replicated via kafka
 # class TaskUserViewSet(viewsets.ModelViewSet):

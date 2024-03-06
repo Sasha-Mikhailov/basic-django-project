@@ -4,7 +4,7 @@ import uuid
 from rest_framework import serializers
 
 from app.settings import Topics
-from tasks.producer import Producer
+from kafka_app.producer import Producer
 from users.models import User
 
 p = Producer()
