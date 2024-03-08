@@ -29,3 +29,14 @@ test:
 	cd src && pytest -x
 
 pr: fmt lint test
+
+migration_name = "yet-another-migration"
+
+migrations:
+	cd src && ./manage.py makemigrations --name $(migration_name)
+
+migrate: migrations
+	cd src && ./manage.py migrate
+
+run:
+	cd src && ./manage.py runserver
