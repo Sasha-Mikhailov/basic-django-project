@@ -1,12 +1,12 @@
 from confluent_kafka import KafkaError
 
-from app.consumer import Consumer
-from app.models import TaskUser
-from app.producer import Topics
-from app.serializers import TaskUserSerializer
+from app.conf import Topics
+from billing.models import BillingUser
+from billing.serializers import BillingUserSerializer
+from kafka_app.consumer import Consumer
 
 
-def consume_users(consumer: Consumer):
+def consume_tasks(consumer: Consumer):
     msg = consumer.poll(timeout_ms=1.0, max_records=200)
 
     if msg is None:
@@ -24,38 +24,37 @@ def consume_users(consumer: Consumer):
     else:
         # Check for Kafka message
         record_key, record_data = consumer.parse(msg)
+        payload = record_data.pop("payload")
 
-        print(f"consumed message with key {record_key} and value {record_data}")
-
-        payload = record_key.get("payload", {})
+        print(f"consumed message with key {record_key}; " f"meta {record_data}; " f"payload {payload}")
 
         if record_data["event_name"] == "users.user-created":
-            user = TaskUser.objects.update_or_create(
+            user = BillingUser.objects.update_or_create(
                 public_id=payload["public_id"],
                 role=payload["user_role"],
                 first_name=payload["first_name"],
                 last_name=payload["last_name"],
             )
-            print(f"created user {TaskUserSerializer(user)}")
+            print(f"created BillingUser {BillingUserSerializer(user)}")
 
         elif record_data["event_name"] == "users.user-updated":
-            user = TaskUser.objects.filter(public_id=payload["public_id"]).update(
+            user = BillingUser.objects.filter(public_id=payload["public_id"]).update(
                 role=payload["user_role"],
                 first_name=payload["first_name"],
                 last_name=payload["last_name"],
             )
-            print(f"updated user {TaskUserSerializer(user)}")
+            print(f"updated BillingUser {BillingUserSerializer(user)}")
 
         else:
-            print(f"ignoring message with key `{record_key}` and payload `{payload}`")
+            print(f"ignoring message with key `{record_key}` and meta `{record_data}`")
 
 
 consumer = Consumer()
-consumer.subscribe([Topics.users_stream])
+consumer.subscribe([Topics.users_stream, Topics.users])
 
 try:
     while True:
-        consume_users(consumer)
+        consume_tasks(consumer)
 
 except KeyboardInterrupt:
     pass

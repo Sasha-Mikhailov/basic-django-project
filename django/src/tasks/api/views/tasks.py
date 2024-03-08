@@ -33,8 +33,7 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     queryset = Task.objects.all().order_by("-created")
     serializer_class = TaskSerializer
-    # FIXME change to IsAuthenticated
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
 
     def perform_create(self, serializer):
         user_data = serializer.validated_data.get("user")
@@ -58,14 +57,12 @@ class TaskViewSet(viewsets.ModelViewSet):
                 "title": str(serializer.data["title"]),
                 "description": str(serializer.data["description"]),
                 "assignee_public_id": str(user.public_id),
-                "cost_assigned": str(serializer.data["cost_assigned"]),
-                "cost_completed": str(serializer.data["cost_completed"]),
                 "status": str(serializer.data["status"]),
             },
         }
 
         # CUD event: task created
-        p.produce(topic=Topics.tasks_stream, key=event["event_name"], value=event)
+        p.produce(topic=Topics.tasks_stream, key=event["event_id"], value=event)
 
     def perform_update(self, serializer):
         old_status = serializer.instance.status
@@ -87,7 +84,7 @@ class TaskViewSet(viewsets.ModelViewSet):
             }
 
             # business event: status changed
-            p.produce(topic=Topics.tasks, key=event["event_name"], value=event)
+            p.produce(topic=Topics.tasks, key=event["event_id"], value=event)
 
     @action(detail=False, methods=["post"], url_path="reassign", url_name="reassign", permission_classes=[permissions.IsAdminUser])
     def reassign_tasks(self, request):

@@ -48,7 +48,7 @@ class UserSerializer(serializers.ModelSerializer):
                 "user_role": str(user.role),
             },
         }
-        p.produce(Topics.users_stream, event["event_name"], event)
+        p.produce(topic=Topics.users_stream, key=event["event_id"], value=event)
 
         return user
 
@@ -74,7 +74,7 @@ class UserSerializer(serializers.ModelSerializer):
                 "user_role": str(user.role),
             },
         }
-        p.produce(Topics.users_stream, event["event_name"], event)
+        p.produce(topic=Topics.users_stream, key=event["event_id"], value=event)
         # print(validated_data)
 
         if old_role != new_role:
@@ -90,6 +90,6 @@ class UserSerializer(serializers.ModelSerializer):
                     "new_user_role": str(new_role),
                 },
             }
-            p.produce(Topics.users, event["event_name"], event)
+            p.produce(topic=Topics.users, key=event["event_id"], value=event)
 
         return user

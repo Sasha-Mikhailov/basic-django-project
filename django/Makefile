@@ -30,10 +30,13 @@ test:
 
 pr: fmt lint test
 
-migration_name = "yet-another-migration"
+migration_name ='yet_another_migration'
 
 migrations:
-	cd src && ./manage.py makemigrations --name $(migration_name)
+	cd src && ./manage.py makemigrations --name ${migration_name}
+
+dry-migrations:
+	cd src && ./manage.py makemigrations --dry-run
 
 migrate: migrations
 	cd src && ./manage.py migrate
