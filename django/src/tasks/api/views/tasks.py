@@ -47,7 +47,7 @@ class TaskViewSet(viewsets.ModelViewSet):
         serializer.save(user=user)
 
         event = {
-            "event_id": uuid.uuid4(),
+            "event_id": str(uuid.uuid4()),
             "event_version": "1",
             "event_name": "tasks.task-created",
             "event_time": datetime.now().isoformat(),
@@ -71,7 +71,7 @@ class TaskViewSet(viewsets.ModelViewSet):
         serializer.save(**serializer.validated_data)
         if old_status != new_status:
             event = {
-                "event_id": uuid.uuid4(),
+                "event_id": str(uuid.uuid4()),
                 "event_version": "1",
                 "event_name": "tasks.task-status-updated",
                 "event_time": datetime.now().isoformat(),

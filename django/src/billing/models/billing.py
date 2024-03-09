@@ -45,7 +45,7 @@ class BillingTask(TimestampedModel):
 
     public_id = models.UUIDField(unique=True, blank=False, null=False)
 
-    assignee_public_id = models.UUIDField(unique=True, blank=False, null=False)
+    assignee_public_id = models.UUIDField(blank=False, null=False)
 
     status = models.CharField(
         max_length=100,

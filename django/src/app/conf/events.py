@@ -1,6 +1,7 @@
-KAFKA_DRY_RUN = True
+KAFKA_DRY_RUN = False
 KAFKA_HOST = "localhost:9092"
 KAFKA_REGISTRY_HOST = "localhost:8081"
+KAFKA_CONSUME_TIMEOUT = 5.0
 
 
 # TODO think about topic naming (from the feedback)

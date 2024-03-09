@@ -1,29 +1,12 @@
-from confluent_kafka import KafkaError
-
-from app.conf import Topics
+from app.settings import Topics
+from billing.api.serializers import BillingTaskSerializer
 from billing.models import BillingTask
-from billing.serializers import BillingTaskSerializer
 from kafka_app.consumer import Consumer
 
 
-def consume_tasks(consumer: Consumer):
-    msg = consumer.poll(timeout_ms=1.0, max_records=200)
-
-    if msg is None:
-        # No message available within timeout.
-        # Initial message consumption may take up to
-        # `session.timeout.ms` for the consumer group to
-        # rebalance and start consuming
-        print("Waiting for message or event/error in poll()")
-        return
-
-    elif msg.error():
-        print("error: {}".format(msg.error()))
-        raise KafkaError(msg.error())
-
-    else:
-        # Check for Kafka message
-        record_key, record_data = consumer.parse(msg)
+class BillingTaskConsumer(Consumer):
+    @staticmethod
+    def do_work(record_key, record_data):
         payload = record_data.pop("payload")
 
         print(f"consumed message with key {record_key}; " f"meta {record_data}; " f"payload {payload}")
@@ -37,7 +20,7 @@ def consume_tasks(consumer: Consumer):
             )
             print(f"created task {BillingTaskSerializer(user)}")
 
-        elif record_data["event_name"] == "tasks.status-updated":
+        elif record_data["event_name"] == "tasks.task-status-updated":
             user = BillingTask.objects.filter(public_id=payload["public_id"]).update(
                 status=payload["new_status"],
             )
@@ -47,16 +30,13 @@ def consume_tasks(consumer: Consumer):
             print(f"ignoring message with key `{record_key}` and meta `{record_data}`")
 
 
-consumer = Consumer()
-consumer.subscribe([Topics.tasks_stream, Topics.tasks])
+btc = BillingTaskConsumer()
+btc.subscribe(
+    [
+        Topics.tasks_stream,
+        Topics.tasks,
+    ]
+)
 
-try:
-    while True:
-        consume_tasks(consumer)
-
-except KeyboardInterrupt:
-    pass
-
-finally:
-    # Leave group and commit final offsets
-    consumer.close()
+def consume_billing_tasks():
+    btc.start_consuming(timeout=5.0)

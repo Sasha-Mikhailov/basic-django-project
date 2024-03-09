@@ -35,7 +35,7 @@ class UserSerializer(serializers.ModelSerializer):
         user = User.objects.create_user(**validated_data)
 
         event = {
-            "event_id": uuid.uuid4(),
+            "event_id": str(uuid.uuid4()),
             "event_version": 1,
             "event_name": "users.user-created",
             "event_time": datetime.now().isoformat(),
@@ -61,7 +61,7 @@ class UserSerializer(serializers.ModelSerializer):
 
         # TODO think about bulk update
         event = {
-            "event_id": uuid.uuid4(),
+            "event_id": str(uuid.uuid4()),
             "event_version": "1",
             "event_name": "users.user-updated",
             "event_time": datetime.now().isoformat(),
@@ -79,7 +79,7 @@ class UserSerializer(serializers.ModelSerializer):
 
         if old_role != new_role:
             event = {
-                "event_id": uuid.uuid4(),
+                "event_id": str(uuid.uuid4()),
                 "event_version": "1",
                 "event_name": "users.user-role-changed",
                 "event_time": datetime.now().isoformat(),

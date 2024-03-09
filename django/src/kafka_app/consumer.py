@@ -1,11 +1,12 @@
 import json
 import logging
 
-from confluent_kafka import Consumer as KafkaConsumer
+from confluent_kafka import Consumer as KafkaConsumer, KafkaError
 
 from app.settings import DEBUG
 from app.settings import KAFKA_DRY_RUN
 from app.settings import KAFKA_HOST
+from app.settings import KAFKA_CONSUME_TIMEOUT
 
 logger = logging.getLogger(__name__)
 
@@ -21,18 +22,54 @@ class Consumer:
         self.dry_run = dry_run or KAFKA_DRY_RUN
 
         if not self.dry_run:
-            self.consumer = KafkaConsumer(conf)
+            self.consumer = KafkaConsumer(self.conf)
 
             if topics:
                 self.subscribe(topics)
 
     def subscribe(self, topics: list[str]):
-        self.counts.update = {topic_name: 0 for topic_name in topics if topic_name not in self.counts}
+        self.counts.update({topic_name: 0 for topic_name in topics if topic_name not in self.counts})
         if not self.dry_run:
             self.consumer.subscribe(topics)
 
-    def poll(self, timeout: float = 1.0):
+    def poll(self, timeout: float = None):
+        timeout = timeout or KAFKA_CONSUME_TIMEOUT
         return self.consumer.poll(timeout)
+
+    def consume(self, **kwargs):
+        timeout = kwargs.pop("timeout", None)
+        msg = self.poll(timeout=timeout)
+
+        if msg is None:
+            if DEBUG:
+                print(f"Waiting for message or event/error in poll() with timeout={timeout}s in topics {list(self.counts.keys())}")
+            return
+
+        elif msg.error():
+            print("error: {}".format(msg.error()))
+            raise KafkaError(msg.error())
+
+        else:
+            # Check for Kafka message
+            record_key, record_data = self.parse(msg)
+
+            self.do_work(record_key, record_data)
+
+    def start_consuming(self, **kwargs):
+        try:
+            while True:
+                self.consume(**kwargs)
+
+        except KeyboardInterrupt:
+            pass
+
+        finally:
+            # Leave group and commit final offsets
+            self.close()
+
+    def do_work(self, record_key, record_data):
+        """override this method to implement the consumer's work"""
+        raise NotImplementedError
 
     def close(self):
         self.consumer.close()
@@ -54,7 +91,5 @@ class Consumer:
             record_key = msg.key()
             record_value = msg.value()
             record_data = json.loads(record_value)
-            count = record_data["count"]
-            print("Consumed record with key {} and value {}".format(record_key, record_value))
 
             return record_key, record_data

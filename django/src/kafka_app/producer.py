@@ -1,3 +1,4 @@
+import json
 import logging
 
 from confluent_kafka import Producer as KafkaProducer
@@ -23,6 +24,9 @@ class Producer:
 
     def produce(self, topic, key, value):
         stdout(f"producing to topic `{topic}` with key `{key}` and value {value}")
+        if isinstance(value, dict):
+            value = json.dumps(value)
+
         if not self.dry_run:
             self.producer.produce(
                 topic,

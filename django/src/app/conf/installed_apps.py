@@ -6,6 +6,7 @@ APPS = [
     "users",
     "tasks",
     "billing",
+    "kafka_app",
 ]
 
 THIRD_PARTY_APPS = [
