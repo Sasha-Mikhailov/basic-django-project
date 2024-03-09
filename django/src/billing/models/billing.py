@@ -1,9 +1,19 @@
-import random
-
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from app.models import TimestampedModel
+
+
+def get_assign_cost():
+    import random
+
+    return random.randint(1000, 2000) / 100
+
+
+def get_complete_cost():
+    import random
+
+    return random.randint(2000, 4000) / 100
 
 
 class BillingUser(TimestampedModel):
@@ -56,7 +66,7 @@ class BillingTask(TimestampedModel):
     cost_assign = models.DecimalField(
         max_digits=10,
         decimal_places=2,
-        default=random.randint(1000, 2000) / 100,
+        default=get_assign_cost,
         editable=False,  # only the system can set the cost
         blank=False,
         null=False,
@@ -65,7 +75,7 @@ class BillingTask(TimestampedModel):
     cost_complete = models.DecimalField(
         max_digits=10,
         decimal_places=2,
-        default=random.randint(2000, 4000) / 100,
+        default=get_complete_cost,
         editable=False,  # only the system can set the cost
         blank=False,
         null=False,
