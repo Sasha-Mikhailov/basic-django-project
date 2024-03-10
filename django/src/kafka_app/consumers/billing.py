@@ -1,5 +1,4 @@
 from app.settings import Topics
-from billing.api.serializers import BillingUserSerializer
 from billing.models import BillingTask
 from billing.models import BillingUser
 from kafka_app.consumer import Consumer
@@ -30,7 +29,6 @@ class BillingTaskConsumer(Consumer):
             # task_serializer = BillingTaskSerializer(task)
             # task_serializer.is_valid()
             # task_serializer.save()
-
 
         elif record_data["event_name"] == "tasks.task-status-updated":
             task = BillingTask.objects.filter(public_id=payload["public_id"]).update(
