@@ -7,6 +7,10 @@
 --index-url https://artifactory.klarna.net/artifactory/api/pypi/r-pypi-pypi-org/simple
 --extra-index-url https://artifactory.klarna.net/artifactory/api/pypi/v-pypi-production/simple/
 
+aiofiles==23.2.1
+    # via python-schema-registry-client
+anyio==4.3.0
+    # via httpx
 asgiref==3.7.2
     # via django
 async-timeout==4.0.3
@@ -20,12 +24,16 @@ bcrypt==4.0.1
 certifi==2023.11.17
     # via
     #   django-healthchecks
+    #   httpcore
+    #   httpx
     #   requests
     #   sentry-sdk
 cffi==1.16.0
     # via cryptography
 charset-normalizer==3.3.2
     # via requests
+confluent-kafka==2.3.0
+    # via django (pyproject.toml)
 cryptography==41.0.5
     # via pyjwt
 django==4.2.7
@@ -68,12 +76,27 @@ drf-spectacular[sidecar]==0.26.5
     # via django (pyproject.toml)
 drf-spectacular-sidecar==2023.10.1
     # via drf-spectacular
+exceptiongroup==1.2.0
+    # via anyio
+fastavro==1.9.4
+    # via python-schema-registry-client
+h11==0.14.0
+    # via httpcore
+httpcore==1.0.4
+    # via httpx
+httpx==0.26.0
+    # via python-schema-registry-client
 idna==3.4
-    # via requests
+    # via
+    #   anyio
+    #   httpx
+    #   requests
 inflection==0.5.1
     # via drf-spectacular
 jsonschema==4.20.0
-    # via drf-spectacular
+    # via
+    #   drf-spectacular
+    #   python-schema-registry-client
 jsonschema-specifications==2023.11.1
     # via jsonschema
 pillow==10.1.0
@@ -86,6 +109,8 @@ pyjwt[crypto]==2.8.0
     # via
     #   drf-jwt
     #   pyjwt
+python-schema-registry-client==2.5.6
+    # via django (pyproject.toml)
 pytz==2023.3.post1
     # via djangorestframework
 pyyaml==6.0.1
@@ -104,10 +129,16 @@ rpds-py==0.13.1
     #   referencing
 sentry-sdk==1.35.0
     # via django (pyproject.toml)
+sniffio==1.3.1
+    # via
+    #   anyio
+    #   httpx
 sqlparse==0.4.4
     # via django
 typing-extensions==4.9.0
-    # via asgiref
+    # via
+    #   anyio
+    #   asgiref
 uritemplate==4.1.1
     # via drf-spectacular
 urllib3==2.1.0
