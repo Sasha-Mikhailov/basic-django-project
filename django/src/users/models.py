@@ -14,6 +14,6 @@ class User(AbstractUser):  # noqa
 
     objects: ClassVar[_UserManager] = _UserManager()
 
-    public_id = models.UUIDField(editable=False, default=uuid.uuid4())
+    public_id = models.UUIDField(editable=False, default=uuid.uuid4)
 
     role = models.CharField(choices=Role.choices, default=Role.WORKER, max_length=100)

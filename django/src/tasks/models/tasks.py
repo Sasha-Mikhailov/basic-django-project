@@ -18,7 +18,7 @@ class TaskUser(TimestampedModel):
 
 
 class Task(TimestampedModel):
-    public_id = models.UUIDField(unique=True, editable=False, default=uuid.uuid4())
+    public_id = models.UUIDField(unique=True, editable=False, default=uuid.uuid4)
 
     title = models.CharField(max_length=100)
     description = models.TextField()

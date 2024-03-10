@@ -16,7 +16,7 @@ class TaskUserSerializer(serializers.ModelSerializer):
 class TaskSerializer(serializers.ModelSerializer):
     public_id = serializers.UUIDField(
         read_only=True,
-        default=serializers.CreateOnlyDefault(uuid.uuid4()),
+        default=serializers.CreateOnlyDefault(uuid.uuid4),
     )
     user = serializers.StringRelatedField(many=False)
 

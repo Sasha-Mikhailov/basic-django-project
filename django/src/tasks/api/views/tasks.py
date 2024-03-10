@@ -39,7 +39,7 @@ class TaskViewSet(viewsets.ModelViewSet):
         user_data = serializer.validated_data.get("user")
 
         if not user_data:
-            worker_users = TaskUser.objects.filter(role="worker")
+            worker_users = TaskUser.objects.filter(role="WORKER")
             user = worker_users[random.randint(0, len(worker_users) - 1)]
         else:
             user = TaskUser.objects.get(**user_data)
