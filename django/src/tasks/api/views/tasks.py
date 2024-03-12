@@ -96,12 +96,33 @@ class TaskViewSet(viewsets.ModelViewSet):
         if len(tasks_in_progress) == 0:
             return Response({"status": "No tasks with status=assigned available — nothing to reassign"})
 
-        worker_users = TaskUser.objects.filter(role="worker")
+        worker_users = TaskUser.objects.filter(role="WORKER")
         if len(worker_users) == 0:
             return Response({"status": "No users with role=worker available; can't reassign tasks"})
 
         for task in tasks_in_progress:
-            task.user = worker_users[random.randint(0, len(worker_users) - 1)]
+            new_assignee = worker_users[random.randint(0, len(worker_users) - 1)]
+            task.user = new_assignee
+
+            event = {
+                "event_id": str(uuid.uuid4()),
+                "event_version": "1",
+                "event_name": "tasks.task-reassigned",
+                "event_time": datetime.now().isoformat(),
+                "producer": "tasks-service",
+                "payload": {
+                    "public_id": str(task.public_id),
+                    "new_assignee_public_id": str(new_assignee.public_id),
+                    # just in case ↓
+                    "title": str(task.title),
+                    "description": str(task.description),
+                    "status": str(task.status),
+                },
+            }
+
+            # business event: status changed
+            p.produce(topic=Topics.tasks_stream, key=event["event_id"], value=event)
+
         tasks_in_progress.bulk_update(tasks_in_progress, ["user"])
 
         return Response({"status": f"{len(tasks_in_progress)} tasks reassigned"})

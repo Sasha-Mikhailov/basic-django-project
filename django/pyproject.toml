@@ -23,6 +23,7 @@ dependencies = [
     "psycopg2-binary",
     "confluent_kafka",
     "python-schema-registry-client",
+    "tenacity",
 ]
 
 

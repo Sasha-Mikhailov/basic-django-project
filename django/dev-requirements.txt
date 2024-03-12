@@ -337,6 +337,8 @@ sqlparse==0.4.4
     # via django
 stack-data==0.6.3
     # via ipython
+tenacity==8.2.3
+    # via django (pyproject.toml)
 tomli==2.0.1
     # via
     #   autoflake

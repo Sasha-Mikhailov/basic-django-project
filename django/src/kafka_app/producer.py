@@ -33,3 +33,5 @@ class Producer:
                 key=key,
                 value=value,
             )
+
+            self.producer.flush()

@@ -25,7 +25,7 @@ class TasksUserConsumer(Consumer):
                 first_name=payload["first_name"],
                 last_name=payload["last_name"],
             )
-            print(f"updated user {TaskUserSerializer(user)}")
+            print(f"updated user {user}")
 
         else:
             print(f"ignoring message with key `{record_key}` and payload `{payload}`")

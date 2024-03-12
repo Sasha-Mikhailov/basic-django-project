@@ -2,59 +2,86 @@ from app.settings import Topics
 from billing.models import BillingTask
 from billing.models import BillingUser
 from kafka_app.consumer import Consumer
+from django.db.utils import OperationalError
+
+from tenacity import retry, wait_exponential, retry_if_exception_type
 
 
 class BillingTaskConsumer(Consumer):
-    @staticmethod
-    def do_work(record_key, record_data):
-        payload = record_data.pop("payload")
+    @retry(
+        wait=wait_exponential(multiplier=1, min=2, max=10),
+        retry=retry_if_exception_type(OperationalError),
+    )
+    def do_work(self, record_key, record_data):
+        payload = record_data.get("payload", {})
         print(f"consumed message with key {record_key}; " f"meta {record_data}; " f"payload {payload}")
 
-        if record_data["event_name"] == "tasks.task-created":
-            # user = BillingTask.objects.update_or_create(
-            #     public_id=payload["public_id"],
-            #     assignee_public_id=payload["assignee_public_id"],
-            #     status=payload["status"],
-            #     title=payload["title"],
-            # )
+        try:
+            if record_data["event_name"] == "tasks.task-created":
 
-            task = BillingTask(
-                public_id=payload["public_id"],
-                assignee_public_id=payload["assignee_public_id"],
-                title=payload["title"],
-                status=payload["status"],
-            )
-            task.save()
+                task = BillingTask(
+                    public_id=payload["public_id"],
+                    assignee_public_id=payload["assignee_public_id"],
+                    title=payload["title"],
+                    status=payload["status"],
+                )
+                task.save()
+                print(f"created task {task} with status {task}")
 
-            # task_serializer = BillingTaskSerializer(task)
-            # task_serializer.is_valid()
-            # task_serializer.save()
+            elif record_data["event_name"] == "tasks.task-status-updated":
+                if BillingTask.objects.filter(public_id=payload["public_id"]).exists():
+                    task = BillingTask.objects.get(public_id=payload["public_id"])
+                    task.status=payload["new_status"]
+                else:
+                    task = BillingTask(
+                        public_id=payload["public_id"],
+                        assignee_public_id=payload.get("assignee_public_id"),
+                        title=payload.get("title"),
+                        status=payload.get("new_status"),
+                    )
+                task.save()
+                print(f"updated task {task} with status {payload['new_status']}")
 
-        elif record_data["event_name"] == "tasks.task-status-updated":
-            task = BillingTask.objects.filter(public_id=payload["public_id"]).update(
-                status=payload["new_status"],
-            )
-            print(f"updated task {task.public_id} with status {task.status}")
+            elif record_data["event_name"] == "tasks.task-reassigned":
+                if BillingTask.objects.filter(public_id=payload["public_id"]).exists():
+                    task = BillingTask.objects.get(public_id=payload["public_id"])
+                    task.assignee_public_id=payload["new_assignee_public_id"]
+                else:
+                    task = BillingTask(
+                        public_id=payload["public_id"],
+                        assignee_public_id=payload["new_assignee_public_id"],
+                        title=payload.get("title"),
+                        status=payload.get("status"),
+                    )
+                task.save()
+                print(f"re-assigned task {task} to user {payload['new_assignee_public_id']}")
 
-        elif record_data["event_name"] == "users.user-created":
-            user = BillingUser.objects.update_or_create(
-                public_id=payload["public_id"],
-                role=payload["user_role"],
-                first_name=payload["first_name"],
-                last_name=payload["last_name"],
-            )
-            print(f"created BillingUser with pub_id {user.public_id} and role {user.role}")
+            elif record_data["event_name"] == "users.user-created":
+                user = BillingUser(
+                    public_id=payload["public_id"],
+                    role=payload["user_role"],
+                    first_name=payload["first_name"],
+                    last_name=payload["last_name"],
+                )
+                user.save()
+                print(f"created BillingUser with pub_id {user} and role {user}")
 
-        elif record_data["event_name"] == "users.user-updated":
-            user = BillingUser.objects.filter(public_id=payload["public_id"]).update(
-                role=payload["user_role"],
-                first_name=payload["first_name"],
-                last_name=payload["last_name"],
-            )
-            print(f"updated BillingUser with pub_id {user.public_id}")
+            elif record_data["event_name"] == "users.user-updated":
+                user = BillingUser.objects.get(public_id=payload["public_id"])
+                user.role=payload["user_role"]
+                user.first_name=payload["first_name"]
+                user.last_name=payload["last_name"]
+                user.save()
+                print(f"updated BillingUser with pub_id {user.public_id}")
 
-        else:
-            print(f"ignoring message with key `{record_key}` and meta `{record_data}`")
+            else:
+                print(f"ignoring message with key `{record_key}` and meta `{record_data}`")
+
+        except Exception as e:
+            # TODO add DLQ for failed messages
+
+            print(f"\n\t >>> ERROR processing message with key `{record_key}` and meta `{record_data}`\n\n {e}\n")
+            raise e
 
 
 consumer = BillingTaskConsumer(group_id="billing_consumer")
@@ -65,7 +92,6 @@ consumer.subscribe(
         Topics.users_stream,
     ]
 )
-
 
 def start_billing_consumer():
     consumer.start_consuming(timeout=5.0)
