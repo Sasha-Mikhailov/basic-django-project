@@ -1,4 +1,6 @@
 from datetime import datetime
+import random
+import uuid
 
 from rest_framework.exceptions import ValidationError
 
@@ -7,17 +9,17 @@ from django.db import transaction as db_transaction
 from django.utils.translation import gettext_lazy as _
 
 from app.models import TimestampedModel
+from app.settings import Topics
+from kafka_app.producer import Producer
+
+p = Producer()
 
 
 def get_assign_cost():
-    import random
-
     return random.randint(1000, 2000) / 100
 
 
 def get_complete_cost():
-    import random
-
     return random.randint(2000, 4000) / 100
 
 
@@ -111,6 +113,26 @@ class BillingTransaction(TimestampedModel):
 
         print(f"saving transaction {self.description} with type {self.type} and amount {self.credit or self.debit}")
         super(BillingTransaction, self).save(*args, **kwargs)
+
+        event = {
+            "event_id": str(uuid.uuid4()),
+            "event_version": "1",
+            "event_name": "billing.transaction-created",
+            "event_time": datetime.now().isoformat(),
+            "producer": "billing-service",
+            "payload": {
+                "tx_id": str(self.id),
+                "tx_type": str(self.type),
+                "billing_cycle": str(self.billing_cycle_id),
+                "account": str(self.account),
+                "credit": str(self.credit),
+                "debit": str(self.debit),
+                # just in case
+                "description": str(self.description),
+            },
+        }
+
+        p.produce(topic=Topics.billing_tx, key=event["event_id"], value=event)
 
 
 class BillingTask(TimestampedModel):
@@ -231,3 +253,18 @@ class BillingTask(TimestampedModel):
                     print(f"deposited {self.cost_complete} to {user} for task {self.public_id} completed")
 
             super(BillingTask, self).save(*args, **kwargs)
+
+        event = {
+            "event_id": str(uuid.uuid4()),
+            "event_version": "1",
+            "event_name": "billing.task-created",
+            "event_time": datetime.now().isoformat(),
+            "producer": "billing-service",
+            "payload": {
+                "public_id": str(self.public_id),
+                "cost_assign": str(self.cost_assign),
+                "cost_complete": str(self.cost_complete),
+            },
+        }
+
+        p.produce(topic=Topics.billing_tasks, key=event["event_id"], value=event)

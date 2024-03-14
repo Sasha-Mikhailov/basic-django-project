@@ -13,16 +13,6 @@ from tasks.api.serializers import TaskSerializer
 from tasks.models import Task
 from tasks.models import TaskUser
 
-# FIXME users can't be created here, only replicated via kafka
-# class TaskUserViewSet(viewsets.ModelViewSet):
-#     """
-#     API endpoint that allows users to be viewed or edited.
-#     """
-#     queryset = TaskUser.objects.all().order_by('-created')
-#     serializer_class = TaskUserSerializer
-#     # FIXME change to IsAuthenticated
-#     permission_classes = [permissions.AllowAny]
-
 p = Producer()
 
 
