@@ -4,7 +4,9 @@ from django.db import migrations
 from django.db import models
 import django.db.models.deletion
 
-import billing.models.billing
+import billing.models.user
+import billing.models.task
+import billing.models.transaction
 
 
 class Migration(migrations.Migration):
@@ -22,8 +24,8 @@ class Migration(migrations.Migration):
                 ("public_id", models.UUIDField(unique=True)),
                 ("assignee_public_id", models.UUIDField()),
                 ("status", models.CharField(max_length=100)),
-                ("cost_assign", models.DecimalField(decimal_places=2, default=billing.models.billing.get_assign_cost, editable=False, max_digits=10)),
-                ("cost_complete", models.DecimalField(decimal_places=2, default=billing.models.billing.get_complete_cost, editable=False, max_digits=10)),
+                ("cost_assign", models.DecimalField(decimal_places=2, default=billing.models.task.get_assign_cost, editable=False, max_digits=10)),
+                ("cost_complete", models.DecimalField(decimal_places=2, default=billing.models.task.get_complete_cost, editable=False, max_digits=10)),
                 ("title", models.CharField(max_length=100)),
             ],
             options={

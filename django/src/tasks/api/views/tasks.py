@@ -72,6 +72,7 @@ class TaskViewSet(viewsets.ModelViewSet):
                 "producer": "tasks-service",
                 "payload": {
                     "public_id": str(serializer.data["public_id"]),
+                    "created": str(serializer.data["created"]),
                     "old_status": str(old_status),
                     "new_status": str(new_status),
                 },
@@ -108,6 +109,7 @@ class TaskViewSet(viewsets.ModelViewSet):
                     "public_id": str(task.public_id),
                     "new_assignee_public_id": str(new_assignee.public_id),
                     # just in case ↓
+                    "created": str(task.created),
                     "title": str(task.title),
                     "description": str(task.description),
                     "status": str(task.status),

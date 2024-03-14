@@ -2,8 +2,6 @@ from datetime import datetime
 import random
 import uuid
 
-from rest_framework.exceptions import ValidationError
-
 from django.db import models
 from django.db import transaction as db_transaction
 from django.utils.translation import gettext_lazy as _
@@ -11,6 +9,9 @@ from django.utils.translation import gettext_lazy as _
 from app.models import TimestampedModel
 from app.settings import Topics
 from kafka_app.producer import Producer
+
+from billing.models.user import BillingUser, BillingAccount
+from billing.models.transaction import BillingTransaction
 
 p = Producer()
 
@@ -21,118 +22,6 @@ def get_assign_cost():
 
 def get_complete_cost():
     return random.randint(2000, 4000) / 100
-
-
-class BillingUser(TimestampedModel):
-    """
-    replicates the User model from the Users app
-    """
-
-    public_id = models.UUIDField(unique=True)
-
-    role = models.CharField(
-        max_length=100,
-        default="WORKER",
-    )
-    first_name = models.CharField(max_length=100)
-    last_name = models.CharField(max_length=100)
-
-    def __str__(self):
-        return f"{self.first_name} {self.last_name} - {self.role}"
-
-    def save(self, *args, **kwargs):
-        super(BillingUser, self).save(*args, **kwargs)
-        # only for new users
-        if not self.pk:
-            account = BillingAccount.objects.update_or_create(user=self)
-            print(f"created account for user {self} with balance {account}")
-
-
-class BillingAccount(TimestampedModel):
-    """
-    account for each user to keep track of deposits and withdrawals
-    """
-
-    user = models.ForeignKey(BillingUser, on_delete=models.CASCADE, unique=True, blank=False, null=False)
-
-    balance = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        default=0,
-        blank=False,
-        null=False,
-    )
-
-
-class BillingTransaction(TimestampedModel):
-    """
-    id, account_id, desc, type, credit, debit
-    """
-
-    id = models.AutoField(primary_key=True)
-
-    # just a simplification, in reality this would be a foreign key to a BillingCycle
-    # assuming that we have the only one cycle for each user — daily cash out
-    billing_cycle_id = models.DateField(default=datetime.today, blank=False, null=False)
-
-    account = models.ForeignKey(BillingAccount, on_delete=models.CASCADE, blank=False, null=False)
-
-    description = models.CharField(max_length=100)
-
-    class TransactionType(models.TextChoices):
-        DEPOSIT = "DEPOSIT", _("Deposit")
-        WITHDRAWAL = "WITHDRAWAL", _("Withdrawal")
-        PAYMENT = "PAYMENT", _("Payment")
-
-    type = models.CharField(
-        choices=TransactionType.choices,
-        max_length=100,
-        blank=False,
-        null=False,
-    )
-
-    credit = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        default=0,
-        blank=False,
-        null=False,
-    )
-
-    debit = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        default=0,
-        blank=False,
-        null=False,
-    )
-
-    def save(self, *args, **kwargs):
-        if self.pk:
-            raise ValidationError(f"Transaction are immutable, cannot be updated or deleted.")
-
-        print(f"saving transaction {self.description} with type {self.type} and amount {self.credit or self.debit}")
-        super(BillingTransaction, self).save(*args, **kwargs)
-
-        event = {
-            "event_id": str(uuid.uuid4()),
-            "event_version": "1",
-            "event_name": "billing.transaction-created",
-            "event_time": datetime.now().isoformat(),
-            "producer": "billing-service",
-            "payload": {
-                "tx_id": str(self.id),
-                "tx_type": str(self.type),
-                "billing_cycle": str(self.billing_cycle_id),
-                "account": str(self.account),
-                "credit": str(self.credit),
-                "debit": str(self.debit),
-                # just in case
-                "description": str(self.description),
-            },
-        }
-
-        p.produce(topic=Topics.billing_tx, key=event["event_id"], value=event)
 
 
 class BillingTask(TimestampedModel):
