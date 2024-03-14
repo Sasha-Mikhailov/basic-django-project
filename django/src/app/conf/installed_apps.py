@@ -6,6 +6,7 @@ APPS = [
     "users",
     "tasks",
     "billing",
+    "analytics",
     "kafka_app",
 ]
 
