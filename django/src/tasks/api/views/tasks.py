@@ -69,12 +69,15 @@ class TaskViewSet(viewsets.ModelViewSet):
         old_status = serializer.instance.status
         new_status = serializer.validated_data.get("status", old_status)
 
+        if_old_status_assigned = old_status == "ASSIGNED"
+        if_new_status_completed = new_status == "COMPLETED"
+
         serializer.save(**serializer.validated_data)
-        if old_status != new_status:
+        if if_old_status_assigned & if_new_status_completed:
             event = {
                 "event_id": str(uuid.uuid4()),
                 "event_version": "1",
-                "event_name": "tasks.task-status-updated",
+                "event_name": "tasks.task-completed",
                 "event_time": datetime.now().isoformat(),
                 "producer": "tasks-service",
                 "payload": {

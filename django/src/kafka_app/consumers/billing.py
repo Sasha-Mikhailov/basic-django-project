@@ -1,10 +1,13 @@
+from tenacity import retry
+from tenacity import retry_if_exception_type
+from tenacity import wait_exponential
+
+from django.db.utils import OperationalError
+
 from app.settings import Topics
 from billing.models import BillingTask
 from billing.models import BillingUser
 from kafka_app.consumer import Consumer
-from django.db.utils import OperationalError
-
-from tenacity import retry, wait_exponential, retry_if_exception_type
 
 
 class BillingTaskConsumer(Consumer):
@@ -18,7 +21,6 @@ class BillingTaskConsumer(Consumer):
 
         try:
             if record_data["event_name"] == "tasks.task-created":
-
                 task = BillingTask(
                     public_id=payload["public_id"],
                     created=payload["created"],
@@ -29,25 +31,21 @@ class BillingTaskConsumer(Consumer):
                 task.save()
                 print(f"created task {task} with status {task}")
 
-            elif record_data["event_name"] == "tasks.task-status-updated":
+            elif record_data["event_name"] == "tasks.task-completed":
                 if BillingTask.objects.filter(public_id=payload["public_id"]).exists():
                     task = BillingTask.objects.get(public_id=payload["public_id"])
-                    task.status=payload["new_status"]
+                    task.status = payload["new_status"]
+                    task.save()
+                    print(f"updated task {task} with status {payload['new_status']}")
                 else:
-                    task = BillingTask(
-                        public_id=payload["public_id"],
-                        created=payload["created"],
-                        assignee_public_id=payload.get("assignee_public_id"),
-                        title=payload.get("title"),
-                        status=payload.get("new_status"),
-                    )
-                task.save()
-                print(f"updated task {task} with status {payload['new_status']}")
+                    # FIXME handle via DLQ — no task in DB to complete yet
+                    print(f"ERROR: task with public_id {payload['public_id']} does not exist (yet?)")
+                    print(f"event: {record_data}")
 
             elif record_data["event_name"] == "tasks.task-reassigned":
                 if BillingTask.objects.filter(public_id=payload["public_id"]).exists():
                     task = BillingTask.objects.get(public_id=payload["public_id"])
-                    task.assignee_public_id=payload["new_assignee_public_id"]
+                    task.assignee_public_id = payload["new_assignee_public_id"]
                 else:
                     task = BillingTask(
                         public_id=payload["public_id"],
@@ -72,9 +70,9 @@ class BillingTaskConsumer(Consumer):
 
             elif record_data["event_name"] == "users.user-updated":
                 user = BillingUser.objects.get(public_id=payload["public_id"])
-                user.role=payload["user_role"]
-                user.first_name=payload["first_name"]
-                user.last_name=payload["last_name"]
+                user.role = payload["user_role"]
+                user.first_name = payload["first_name"]
+                user.last_name = payload["last_name"]
                 user.save()
                 print(f"updated BillingUser with pub_id {user.public_id}")
 
@@ -96,6 +94,7 @@ consumer.subscribe(
         Topics.users_stream,
     ]
 )
+
 
 def start_billing_consumer():
     consumer.start_consuming(timeout=5.0)

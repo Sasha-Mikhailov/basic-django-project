@@ -1,10 +1,10 @@
 from datetime import datetime
 
-from django.db import models
-from django.utils.translation import gettext_lazy as _
-
 from rest_framework.exceptions import ValidationError
+
+from django.db import models
 from django.db import transaction as db_transaction
+from django.utils.translation import gettext_lazy as _
 
 from app.models import TimestampedModel
 
@@ -30,7 +30,7 @@ class BillingUser(TimestampedModel):
 
     role = models.CharField(
         max_length=100,
-        default='WORKER',
+        default="WORKER",
     )
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
@@ -51,13 +51,7 @@ class BillingAccount(TimestampedModel):
     account for each user to keep track of deposits and withdrawals
     """
 
-    user = models.ForeignKey(
-        BillingUser,
-        on_delete=models.CASCADE,
-        unique=True,
-        blank=False,
-        null=False
-    )
+    user = models.ForeignKey(BillingUser, on_delete=models.CASCADE, unique=True, blank=False, null=False)
 
     balance = models.DecimalField(
         max_digits=10,
@@ -115,7 +109,7 @@ class BillingTransaction(TimestampedModel):
         if self.pk:
             raise ValidationError(f"Transaction are immutable, cannot be updated or deleted.")
 
-        print(f'saving transaction {self.description} with type {self.type} and amount {self.credit or self.debit}')
+        print(f"saving transaction {self.description} with type {self.type} and amount {self.credit or self.debit}")
         super(BillingTransaction, self).save(*args, **kwargs)
 
 
@@ -166,20 +160,14 @@ class BillingTask(TimestampedModel):
         return f"{self.public_id} - assign: ${self.cost_assign}, complete: ${self.cost_complete}"
 
     def save(self, *args, **kwargs):
-        print(f'saving task {self.public_id}')
+        print(f"saving task {self.public_id}")
 
         with db_transaction.atomic():
-            if not BillingUser.objects.filter(
-                public_id=self.assignee_public_id
-            ).exists():
-                user = BillingUser(
-                    public_id=self.assignee_public_id
-                )
+            if not BillingUser.objects.filter(public_id=self.assignee_public_id).exists():
+                user = BillingUser(public_id=self.assignee_public_id)
                 user.save()
             else:
-                user = BillingUser.objects.get(
-                    public_id=self.assignee_public_id
-                )
+                user = BillingUser.objects.get(public_id=self.assignee_public_id)
 
             if not BillingAccount.objects.filter(user=user).exists():
                 account = BillingAccount.objects.create(user=user)
@@ -187,7 +175,7 @@ class BillingTask(TimestampedModel):
                 account = BillingAccount.objects.get(user=user)
 
             if not self.pk:
-                print('creating new task')
+                print("creating new task")
                 # make withdrawal on creation
                 transaction = BillingTransaction.objects.create(
                     billing_cycle_id=datetime.today(),
@@ -199,9 +187,7 @@ class BillingTask(TimestampedModel):
                 print(f"withdrew {self.cost_assign} from {user} for task {self.public_id} assigned")
 
                 # just a shortcut to get the current balance later
-                BillingAccount.objects.filter(user=user).update(
-                    balance=models.F('balance') - self.cost_assign
-                )
+                BillingAccount.objects.filter(user=user).update(balance=models.F("balance") - self.cost_assign)
 
             else:
                 # catch re-assignment of the task
@@ -228,9 +214,7 @@ class BillingTask(TimestampedModel):
                         type=BillingTransaction.TransactionType.WITHDRAWAL,
                         debit=self.cost_assign,
                     )
-                    BillingAccount.objects.filter(user=user).update(
-                        balance=models.F('balance') - self.cost_assign
-                    )
+                    BillingAccount.objects.filter(user=user).update(balance=models.F("balance") - self.cost_assign)
 
                     print(f"withdrew {self.cost_assign} from {user} for task {self.public_id} re-assigned")
 
@@ -243,9 +227,7 @@ class BillingTask(TimestampedModel):
                         type=BillingTransaction.TransactionType.DEPOSIT,
                         credit=self.cost_complete,
                     )
-                    BillingAccount.objects.filter(user=user).update(
-                        balance=models.F('balance') + self.cost_complete
-                    )
+                    BillingAccount.objects.filter(user=user).update(balance=models.F("balance") + self.cost_complete)
                     print(f"deposited {self.cost_complete} to {user} for task {self.public_id} completed")
 
             super(BillingTask, self).save(*args, **kwargs)

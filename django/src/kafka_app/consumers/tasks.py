@@ -1,6 +1,5 @@
 from app.settings import Topics
 from kafka_app.consumer import Consumer
-from tasks.api.serializers import TaskUserSerializer
 from tasks.models import TaskUser
 
 
