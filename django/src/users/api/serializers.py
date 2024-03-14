@@ -42,6 +42,7 @@ class UserSerializer(serializers.ModelSerializer):
             "producer": "users-service",
             "payload": {
                 "public_id": str(user.public_id),
+                "created": str(user.date_joined),
                 "username": str(user.username),
                 "first_name": str(user.first_name),
                 "last_name": str(user.last_name),
@@ -68,6 +69,7 @@ class UserSerializer(serializers.ModelSerializer):
             "producer": "users-service",
             "payload": {
                 "public_id": str(user.public_id),
+                "created": str(user.date_joined),
                 "username": str(user.username),
                 "first_name": str(user.first_name),
                 "last_name": str(user.last_name),

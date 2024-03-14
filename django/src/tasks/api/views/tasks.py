@@ -54,6 +54,7 @@ class TaskViewSet(viewsets.ModelViewSet):
             "producer": "tasks-service",
             "payload": {
                 "public_id": str(serializer.data["public_id"]),
+                "created": str(serializer.data["created"]),
                 "title": str(serializer.data["title"]),
                 "description": str(serializer.data["description"]),
                 "assignee_public_id": str(user.public_id),

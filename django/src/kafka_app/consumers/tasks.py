@@ -13,6 +13,7 @@ class TasksUserConsumer(Consumer):
         if record_data["event_name"] == "users.user-created":
             user = TaskUser.objects.update_or_create(
                 public_id=payload["public_id"],
+                created=payload["created"],
                 role=payload["user_role"],
                 first_name=payload["first_name"],
                 last_name=payload["last_name"],

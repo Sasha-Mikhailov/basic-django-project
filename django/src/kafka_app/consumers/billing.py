@@ -21,6 +21,7 @@ class BillingTaskConsumer(Consumer):
 
                 task = BillingTask(
                     public_id=payload["public_id"],
+                    created=payload["created"],
                     assignee_public_id=payload["assignee_public_id"],
                     title=payload["title"],
                     status=payload["status"],
@@ -35,6 +36,7 @@ class BillingTaskConsumer(Consumer):
                 else:
                     task = BillingTask(
                         public_id=payload["public_id"],
+                        created=payload["created"],
                         assignee_public_id=payload.get("assignee_public_id"),
                         title=payload.get("title"),
                         status=payload.get("new_status"),
@@ -49,6 +51,7 @@ class BillingTaskConsumer(Consumer):
                 else:
                     task = BillingTask(
                         public_id=payload["public_id"],
+                        created=payload["created"],
                         assignee_public_id=payload["new_assignee_public_id"],
                         title=payload.get("title"),
                         status=payload.get("status"),
@@ -59,6 +62,7 @@ class BillingTaskConsumer(Consumer):
             elif record_data["event_name"] == "users.user-created":
                 user = BillingUser(
                     public_id=payload["public_id"],
+                    created=payload["created"],
                     role=payload["user_role"],
                     first_name=payload["first_name"],
                     last_name=payload["last_name"],
