@@ -74,6 +74,7 @@ class BillingTransaction(TimestampedModel):
             "payload": {
                 "tx_id": str(self.id),
                 "tx_type": str(self.type),
+                "created": str(self.created),
                 "billing_cycle": str(self.billing_cycle_id),
                 "account": str(self.account),
                 "credit": str(self.credit),

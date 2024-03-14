@@ -151,6 +151,7 @@ class BillingTask(TimestampedModel):
             "producer": "billing-service",
             "payload": {
                 "public_id": str(self.public_id),
+                "created": str(self.created),
                 "cost_assign": str(self.cost_assign),
                 "cost_complete": str(self.cost_complete),
             },
