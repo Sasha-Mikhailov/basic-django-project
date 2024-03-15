@@ -63,7 +63,7 @@ class Consumer:
 
             elif msg.error():
                 print("error: {}".format(msg.error()))
-                raise KafkaError(msg.error())
+                raise msg.error()
 
             else:
                 # Check for Kafka message

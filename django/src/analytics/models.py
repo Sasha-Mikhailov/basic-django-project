@@ -29,7 +29,7 @@ class ATask(TimestampedModel):
 
     public_id = models.UUIDField(unique=True, blank=False, null=False)
 
-    assignee_public_id = models.UUIDField(blank=False, null=False)
+    assignee_public_id = models.UUIDField(null=True)
 
     status = models.CharField(
         max_length=100,
@@ -38,13 +38,13 @@ class ATask(TimestampedModel):
     cost_assign = models.DecimalField(
         max_digits=10,
         decimal_places=2,
-        editable=False,  # only the system can set the cost
+        null=True,
     )
 
     cost_complete = models.DecimalField(
         max_digits=10,
         decimal_places=2,
-        editable=False,  # only the system can set the cost
+        null=True,
     )
 
     # just in case (not needed for billing per se)
@@ -74,15 +74,9 @@ class ATransaction(TimestampedModel):
     credit = models.DecimalField(
         max_digits=10,
         decimal_places=2,
-        default=0,
-        blank=False,
-        null=False,
     )
 
     debit = models.DecimalField(
         max_digits=10,
         decimal_places=2,
-        default=0,
-        blank=False,
-        null=False,
     )

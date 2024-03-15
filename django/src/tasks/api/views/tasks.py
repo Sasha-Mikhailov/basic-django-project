@@ -73,6 +73,7 @@ class TaskViewSet(viewsets.ModelViewSet):
                 "payload": {
                     "public_id": str(serializer.data["public_id"]),
                     "created": str(serializer.data["created"]),
+                    "assignee_public_id": str(serializer.data["user"]),
                     "old_status": str(old_status),
                     "new_status": str(new_status),
                 },

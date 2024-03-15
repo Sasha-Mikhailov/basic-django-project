@@ -11,7 +11,7 @@ from analytics.models import ATransaction
 from kafka_app.consumer import Consumer
 
 
-class BillingTaskConsumer(Consumer):
+class AnalyticsConsumer(Consumer):
     @retry(
         wait=wait_exponential(multiplier=1, min=2, max=10),
         retry=retry_if_exception_type(OperationalError),
@@ -48,6 +48,7 @@ class BillingTaskConsumer(Consumer):
                     public_id=payload["public_id"],
                     defaults={
                         "created": payload["created"],
+                        "assignee_public_id": payload["assignee_public_id"],
                         "cost_assign": payload["cost_assign"],
                         "cost_complete": payload["cost_complete"],
                     }
@@ -79,7 +80,7 @@ class BillingTaskConsumer(Consumer):
                     defaults={
                         "type": payload["tx_type"],
                         "created": payload["created"],
-                        "billing_cycle_id": payload["billing_cycle"],
+                        "billing_cycle_id": payload["billing_cycle"][:10],
                         "account": payload["account"],
                         "credit": payload["credit"],
                         "debit": payload["debit"],
@@ -99,15 +100,17 @@ class BillingTaskConsumer(Consumer):
             raise e
 
 
-consumer = BillingTaskConsumer(group_id="billing_consumer")
+consumer = AnalyticsConsumer(group_id="analytics_consumer")
 consumer.subscribe(
     [
         Topics.tasks_stream,
         Topics.tasks,
         Topics.users_stream,
+        Topics.billing_tasks,
+        Topics.billing_tx,
     ]
 )
 
 
-def start_billing_consumer():
+def start_analytics_consumer():
     consumer.start_consuming(timeout=5.0)
