@@ -93,7 +93,7 @@ class BillingTask(TimestampedModel):
                     account=account,
                     description=f"Task {self.public_id} assigned",
                     type=BillingTransaction.TransactionType.WITHDRAWAL,
-                    debit=self.cost_assign,
+                    credit=self.cost_assign,
                 )
                 print(f"withdrew {self.cost_assign} from {user} for task {self.public_id} assigned")
 
@@ -123,7 +123,7 @@ class BillingTask(TimestampedModel):
                         account=account,
                         description=f"Task {self.public_id} re-assigned",
                         type=BillingTransaction.TransactionType.WITHDRAWAL,
-                        debit=self.cost_assign,
+                        credit=self.cost_assign,
                     )
                     BillingAccount.objects.filter(user=user).update(balance=models.F("balance") - self.cost_assign)
 
@@ -136,7 +136,7 @@ class BillingTask(TimestampedModel):
                         account=account,
                         description=f"Task {self.public_id} completed",
                         type=BillingTransaction.TransactionType.DEPOSIT,
-                        credit=self.cost_complete,
+                        debit=self.cost_complete,
                     )
                     BillingAccount.objects.filter(user=user).update(balance=models.F("balance") + self.cost_complete)
                     print(f"deposited {self.cost_complete} to {user} for task {self.public_id} completed")
