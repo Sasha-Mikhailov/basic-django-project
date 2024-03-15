@@ -25,7 +25,7 @@ def get_rand_str(length=10):
     return "".join(random.choices("abcdefghijklmnopqrstuvwxyz", k=length))
 
 
-def make_request(endpoint, data, method="POST"):
+def make_request(endpoint, data = dict(), method="POST"):
     if method == "POST":
         response = requests.post(path.join(base_url, endpoint), headers=HEADERS, json=data)
     elif method == "PATCH":
@@ -97,26 +97,40 @@ def complete_task(id: int):
     return None
 
 
+def reassign_tasks():
+
+    data = make_request(reassign_endpoint, {})
+
+    if data:
+        print(
+            f"reassigned tasks {data}"
+        )
+        return data
+
+    print(data)
+    return None
+
+
 def main():
     USERS_TO_CREATE = 1
     TASKS_TO_CREATE = 4
     TASKS_TO_COMPLETE = 3
+    DELAY = 0.333
 
     for _ in range(USERS_TO_CREATE):
-        sleep(0.333)
-        data = create_user()
+        _ = create_user()
+        sleep(DELAY)
 
     tasks_id = []
     for _ in range(TASKS_TO_CREATE):
-        sleep(0.333)
         data = create_task()
         tasks_id.append(data["id"])
+        sleep(DELAY)
 
-    sleep(0.5)
     for idx in random.choices(tasks_id, k=TASKS_TO_COMPLETE):
-        sleep(0.333)
-        data = complete_task(idx)
+        _ = complete_task(idx)
         print("completed task with id", idx)
+        sleep(DELAY)
 
 
 if __name__ == "__main__":
@@ -126,7 +140,9 @@ if __name__ == "__main__":
 
     HEADERS.update({"Authorization": f"Bearer {TOKEN}"})
 
-    main()
+    # main()
+
+    reassign_tasks()
 
     # create_user()
     #
