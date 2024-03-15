@@ -1,8 +1,4 @@
-from tenacity import retry
-from tenacity import retry_if_exception_type
-from tenacity import wait_exponential
-
-from django.db.utils import OperationalError
+from django.db.utils import IntegrityError
 
 from app.settings import Topics
 from billing.models import BillingTask
@@ -11,10 +7,6 @@ from kafka_app.consumer import Consumer
 
 
 class BillingTaskConsumer(Consumer):
-    @retry(
-        wait=wait_exponential(multiplier=1, min=2, max=10),
-        retry=retry_if_exception_type(OperationalError),
-    )
     def do_work(self, record_key, record_data):
         payload = record_data.get("payload", {})
         print(f"consumed message with key {record_key}; " f"meta {record_data}; " f"payload {payload}")
@@ -78,6 +70,9 @@ class BillingTaskConsumer(Consumer):
 
             else:
                 print(f"ignoring message with key `{record_key}` and meta `{record_data}`")
+
+        except IntegrityError as e:
+            print(f"seems already consumed event with key `{record_key}` and meta `{record_data}`")
 
         except Exception as e:
             # TODO add DLQ for failed messages

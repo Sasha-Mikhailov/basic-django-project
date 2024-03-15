@@ -6,10 +6,9 @@ from rest_framework.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from billing.models.user import BillingAccount
-
 from app.models import TimestampedModel
 from app.settings import Topics
+from billing.models.user import BillingAccount
 from kafka_app.producer import Producer
 
 p = Producer()

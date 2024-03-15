@@ -8,10 +8,10 @@ from django.utils.translation import gettext_lazy as _
 
 from app.models import TimestampedModel
 from app.settings import Topics
-from kafka_app.producer import Producer
-
-from billing.models.user import BillingUser, BillingAccount
 from billing.models.transaction import BillingTransaction
+from billing.models.user import BillingAccount
+from billing.models.user import BillingUser
+from kafka_app.producer import Producer
 
 p = Producer()
 
@@ -68,7 +68,7 @@ class BillingTask(TimestampedModel):
     )
 
     def __str__(self):
-        return f"{self.public_id} - assign: ${self.cost_assign}, complete: ${self.cost_complete}"
+        return f"{self.public_id}"
 
     def save(self, *args, **kwargs):
         print(f"saving task {self.public_id}")

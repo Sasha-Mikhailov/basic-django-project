@@ -2,7 +2,11 @@ import json
 import logging
 
 from confluent_kafka import Consumer as KafkaConsumer
-from confluent_kafka import KafkaError
+from tenacity import retry_if_exception_type
+from tenacity import Retrying
+from tenacity import wait_exponential
+
+from django.db.utils import OperationalError
 
 from app.settings import DEBUG
 from app.settings import KAFKA_CONSUME_TIMEOUT
@@ -69,7 +73,13 @@ class Consumer:
                 # Check for Kafka message
                 record_key, record_data = self.parse(msg)
 
-                self.do_work(record_key, record_data)
+                for attempt in Retrying(
+                    wait=wait_exponential(multiplier=1, min=2, max=10),
+                    retry=retry_if_exception_type(OperationalError),
+                ):
+                    with attempt:
+                        self.do_work(record_key, record_data)
+
                 self.commit()
 
     def start_consuming(self, **kwargs):

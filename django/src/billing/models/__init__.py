@@ -7,4 +7,5 @@ __all__ = [
 
 from .task import BillingTask
 from .transaction import BillingTransaction
-from .user import BillingUser, BillingAccount
+from .user import BillingAccount
+from .user import BillingUser

@@ -14,7 +14,7 @@ class TaskUser(TimestampedModel):
     last_name = models.CharField(max_length=100)
 
     def __str__(self):
-        return f'{self.public_id}'
+        return f"{self.public_id}"
 
 
 class Task(TimestampedModel):
@@ -35,4 +35,4 @@ class Task(TimestampedModel):
     )
 
     def __str__(self):
-        return f'{self.public_id}'
+        return f"{self.public_id}"

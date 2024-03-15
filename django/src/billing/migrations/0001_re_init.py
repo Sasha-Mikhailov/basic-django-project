@@ -4,9 +4,9 @@ from django.db import migrations
 from django.db import models
 import django.db.models.deletion
 
-import billing.models.user
 import billing.models.task
 import billing.models.transaction
+import billing.models.user
 
 
 class Migration(migrations.Migration):

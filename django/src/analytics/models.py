@@ -1,12 +1,13 @@
 from django.db import models
 
-from app.models import DefaultModel, TimestampedModel
+from app.models import TimestampedModel
 
 
 class AUser(TimestampedModel):
     """
     replicates the User model from the Users app
     """
+
     class Meta:
         db_table = "analytics_user"
 
