@@ -11,7 +11,7 @@ class TasksUserConsumer(Consumer):
         print(f"consumed message with key {record_key}; " f"meta {record_data}; " f"payload {payload}")
 
         try:
-            if record_data["event_name"] == "users.user-created":
+            if (record_data["event_name"] == "users.user-created") & (str(record_data["event_version"]) == "1"):
                 user, _ = TaskUser.objects.update_or_create(
                     public_id=payload["public_id"],
                     created=payload["created"],
@@ -21,7 +21,7 @@ class TasksUserConsumer(Consumer):
                 )
                 print(f"created user {user} with public_id {payload['public_id']}")
 
-            elif record_data["event_name"] == "users.user-updated":
+            elif (record_data["event_name"] == "users.user-updated") & (str(record_data["event_version"]) == "1"):
                 user = TaskUser.objects.filter(public_id=payload["public_id"]).update(
                     role=payload["user_role"],
                     first_name=payload["first_name"],

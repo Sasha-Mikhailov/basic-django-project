@@ -13,7 +13,7 @@ class AnalyticsConsumer(Consumer):
         print(f"consumed message with key {record_key}; " f"meta {record_data}; " f"payload {payload}")
 
         try:
-            if record_data["event_name"] == "tasks.task-created":
+            if (record_data["event_name"] == "tasks.task-created") & (str(record_data["event_version"]) == "1"):
                 task, created = ATask.objects.update_or_create(
                     public_id=payload["public_id"],
                     defaults={
@@ -25,7 +25,7 @@ class AnalyticsConsumer(Consumer):
                 )
                 print(f"created task {task} with status {task}")
 
-            elif record_data["event_name"] == "tasks.task-completed":
+            elif (record_data["event_name"] == "tasks.task-completed") & (str(record_data["event_version"]) == "1"):
                 task, created = ATask.objects.update_or_create(
                     public_id=payload["public_id"],
                     defaults={
@@ -35,7 +35,7 @@ class AnalyticsConsumer(Consumer):
                 )
                 print(f"updated task {task} with status {payload['new_status']}")
 
-            elif record_data["event_name"] == "billing.task-created":
+            elif (record_data["event_name"] == "billing.task-created") & (str(record_data["event_version"]) == "1"):
                 task, created = ATask.objects.update_or_create(
                     public_id=payload["public_id"],
                     defaults={
@@ -47,7 +47,7 @@ class AnalyticsConsumer(Consumer):
                 )
                 print(f"consumed ATask with pub_id {task.public_id}")
 
-            elif record_data["event_name"] == "users.user-created":
+            elif (record_data["event_name"] == "users.user-created") & (str(record_data["event_version"]) == "1"):
                 user = AUser(
                     public_id=payload["public_id"],
                     created=payload["created"],
@@ -58,7 +58,7 @@ class AnalyticsConsumer(Consumer):
                 user.save()
                 print(f"created AUser with pub_id {user.public_id}")
 
-            elif record_data["event_name"] == "users.user-updated":
+            elif (record_data["event_name"] == "users.user-updated") & (str(record_data["event_version"]) == "1"):
                 user = AUser.objects.get(public_id=payload["public_id"])
                 user.role = payload["user_role"]
                 user.first_name = payload["first_name"]
@@ -66,7 +66,7 @@ class AnalyticsConsumer(Consumer):
                 user.save()
                 print(f"updated AUser with pub_id {user.public_id}")
 
-            elif record_data["event_name"] == "billing.transaction-created":
+            elif (record_data["event_name"] == "billing.transaction-created") & (str(record_data["event_version"]) == "1"):
                 tx, created = ATransaction.objects.update_or_create(
                     tx_id=payload["tx_id"],
                     defaults={

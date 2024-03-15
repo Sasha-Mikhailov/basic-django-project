@@ -12,7 +12,7 @@ class BillingTaskConsumer(Consumer):
         print(f"consumed message with key {record_key}; " f"meta {record_data}; " f"payload {payload}")
 
         try:
-            if record_data["event_name"] == "tasks.task-created":
+            if (record_data["event_name"] == "tasks.task-created") & (str(record_data["event_version"]) == "1"):
                 task = BillingTask(
                     public_id=payload["public_id"],
                     created=payload["created"],
@@ -23,7 +23,7 @@ class BillingTaskConsumer(Consumer):
                 task.save()
                 print(f"created task {task} with status {task}")
 
-            elif record_data["event_name"] == "tasks.task-completed":
+            elif (record_data["event_name"] == "tasks.task-completed") & (str(record_data["event_version"]) == "1"):
                 if BillingTask.objects.filter(public_id=payload["public_id"]).exists():
                     task = BillingTask.objects.get(public_id=payload["public_id"])
                     task.status = payload["new_status"]
@@ -34,7 +34,7 @@ class BillingTaskConsumer(Consumer):
                     print(f"ERROR: task with public_id {payload['public_id']} does not exist (yet?)")
                     print(f"event: {record_data}")
 
-            elif record_data["event_name"] == "tasks.task-reassigned":
+            elif (record_data["event_name"] == "tasks.task-reassigned") & (str(record_data["event_version"]) == "1"):
                 if BillingTask.objects.filter(public_id=payload["public_id"]).exists():
                     task = BillingTask.objects.get(public_id=payload["public_id"])
                     task.assignee_public_id = payload["new_assignee_public_id"]
@@ -49,7 +49,7 @@ class BillingTaskConsumer(Consumer):
                 task.save()
                 print(f"re-assigned task {task} to user {payload['new_assignee_public_id']}")
 
-            elif record_data["event_name"] == "users.user-created":
+            elif (record_data["event_name"] == "users.user-created") & (str(record_data["event_version"]) == "1"):
                 user = BillingUser(
                     public_id=payload["public_id"],
                     created=payload["created"],
@@ -60,7 +60,7 @@ class BillingTaskConsumer(Consumer):
                 user.save()
                 print(f"created BillingUser with pub_id {user} and role {user}")
 
-            elif record_data["event_name"] == "users.user-updated":
+            elif (record_data["event_name"] == "users.user-updated") & (str(record_data["event_version"]) == "1"):
                 user = BillingUser.objects.get(public_id=payload["public_id"])
                 user.role = payload["user_role"]
                 user.first_name = payload["first_name"]
