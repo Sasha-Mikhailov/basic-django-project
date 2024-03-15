@@ -36,7 +36,7 @@ class UserSerializer(serializers.ModelSerializer):
 
         event = {
             "event_id": str(uuid.uuid4()),
-            "event_version": 1,
+            "event_version": "1",
             "event_name": "users.user-created",
             "event_time": datetime.now().isoformat(),
             "producer": "users-service",
