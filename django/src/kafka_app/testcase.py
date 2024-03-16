@@ -1,6 +1,7 @@
 from os import path
 import os.path
 import random
+import sqlite3
 from time import sleep
 import uuid
 
@@ -12,13 +13,26 @@ base_url = path.join(django_host, api_prefix)
 
 token_endpoint = "auth/token/"
 users_endpoint = "users/"
+
 tasks_endpoint = "tasks/"
 reassign_endpoint = "tasks/reassign/"
+
+billing_endpoint = "payments/"
+cashout_endpoint = path.join(billing_endpoint, "cashout/")
 
 TOKEN = ""
 HEADERS = {
     "Authorization": f"Bearer {TOKEN}",
 }
+DELAY = 0.333
+
+SQLITE_DB_FILE = "src/db.sqlite"
+
+
+def get_sqlite_conn():
+    db_path = os.path.join(os.getcwd(), SQLITE_DB_FILE)
+    conn = sqlite3.connect(db_path)
+    return conn
 
 
 def get_rand_str(length=10):
@@ -35,7 +49,7 @@ def make_request(endpoint, data=dict(), method="POST"):
 
     response.raise_for_status()
 
-    if response.status_code != 201:
+    if response.status_code not in [200, 201]:
         print(response)
         return None
 
@@ -97,6 +111,36 @@ def complete_task(id: int):
     return None
 
 
+def get_open_tasks(db_conn):
+    ASSIGNED_TASKS_QUERY = """
+        select id
+        from tasks_task
+        where status = 'ASSIGNED'
+    """
+
+    with db_conn:
+        cursor = db_conn.cursor()
+        cursor.execute(ASSIGNED_TASKS_QUERY)
+        ids = [res[0] for res in cursor.fetchall()]
+
+    print(f"there are {len(ids)} open tasks")
+
+    return ids
+
+
+def complete_open_tasks(ids: list, all=False, k=2):
+    if all:
+        k = len(ids)
+    else:
+        k = int(len(ids) / k)  # complete some part of the tasks
+
+    print(f"completing {k} tasks")
+    for id in random.choices(ids, k=k):
+        complete_task(id)
+        print(f"completed task with id {id}")
+        sleep(DELAY)
+
+
 def reassign_tasks():
     data = make_request(reassign_endpoint, {})
 
@@ -108,11 +152,21 @@ def reassign_tasks():
     return None
 
 
+def trigger_cashout():
+    data = make_request(cashout_endpoint, {})
+
+    if data:
+        print(f"initiated cashout! got response: {data}")
+        return data
+
+    print(data)
+    return data
+
+
 def main():
-    USERS_TO_CREATE = 1
-    TASKS_TO_CREATE = 4
-    TASKS_TO_COMPLETE = 3
-    DELAY = 0.333
+    USERS_TO_CREATE = 0
+    TASKS_TO_CREATE = 15
+    TASKS_TO_COMPLETE = 13
 
     for _ in range(USERS_TO_CREATE):
         _ = create_user()
@@ -139,7 +193,16 @@ if __name__ == "__main__":
 
     # main()
 
-    reassign_tasks()
+    # reassign_tasks()
+
+    _ = trigger_cashout()
+
+
+    # db_conn = get_sqlite_conn()
+    #
+    # ids = get_open_tasks(db_conn)
+    #
+    # complete_open_tasks(ids, all=True, k=2)
 
     # create_user()
     #

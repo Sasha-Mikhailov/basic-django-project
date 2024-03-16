@@ -89,7 +89,7 @@ class BillingTask(TimestampedModel):
                 print("creating new task")
                 # make withdrawal on creation
                 transaction = BillingTransaction.objects.create(
-                    billing_cycle_id=datetime.today(),
+                    billing_cycle_id=datetime.date(datetime.today()),
                     account=account,
                     description=f"Task {self.public_id} assigned",
                     type=BillingTransaction.TransactionType.WITHDRAWAL,
@@ -119,7 +119,7 @@ class BillingTask(TimestampedModel):
                 if task_reassigned:
                     # make withdrawal on re-assignment
                     transaction = BillingTransaction.objects.create(
-                        billing_cycle_id=datetime.today(),
+                        billing_cycle_id=datetime.date(datetime.today()),
                         account=account,
                         description=f"Task {self.public_id} re-assigned",
                         type=BillingTransaction.TransactionType.WITHDRAWAL,
@@ -132,7 +132,7 @@ class BillingTask(TimestampedModel):
                 elif task_completed:
                     # make deposit on completion
                     transaction = BillingTransaction.objects.create(
-                        billing_cycle_id=datetime.today(),
+                        billing_cycle_id=datetime.date(datetime.today()),
                         account=account,
                         description=f"Task {self.public_id} completed",
                         type=BillingTransaction.TransactionType.DEPOSIT,
