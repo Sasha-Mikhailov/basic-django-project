@@ -25,7 +25,7 @@ def get_rand_str(length=10):
     return "".join(random.choices("abcdefghijklmnopqrstuvwxyz", k=length))
 
 
-def make_request(endpoint, data = dict(), method="POST"):
+def make_request(endpoint, data=dict(), method="POST"):
     if method == "POST":
         response = requests.post(path.join(base_url, endpoint), headers=HEADERS, json=data)
     elif method == "PATCH":
@@ -98,13 +98,10 @@ def complete_task(id: int):
 
 
 def reassign_tasks():
-
     data = make_request(reassign_endpoint, {})
 
     if data:
-        print(
-            f"reassigned tasks {data}"
-        )
+        print(f"reassigned tasks {data}")
         return data
 
     print(data)

@@ -1,5 +1,6 @@
 from django.db import models
 
+from app.models import EventLogModel
 from app.models import TimestampedModel
 
 
@@ -81,3 +82,13 @@ class ATransaction(TimestampedModel):
         max_digits=10,
         decimal_places=2,
     )
+
+
+class ATaskLog(EventLogModel):
+    class Meta:
+        db_table = "analytics_task_log"
+
+
+class ATransactionLog(EventLogModel):
+    class Meta:
+        db_table = "analytics_transaction_log"

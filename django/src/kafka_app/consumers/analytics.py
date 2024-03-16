@@ -1,10 +1,27 @@
 from django.db.utils import IntegrityError
 
 from analytics.models import ATask
+from analytics.models import ATaskLog
 from analytics.models import ATransaction
+from analytics.models import ATransactionLog
 from analytics.models import AUser
 from app.settings import Topics
 from kafka_app.consumer import Consumer
+
+TASKS_EVENTS = frozenset(["tasks.task-created", "tasks.task-completed", "billing.task-created"])
+
+BILLING_EVENTS = frozenset(["billing.transaction-created"])
+
+
+def parse_payload_for_event_log(payload):
+    return dict(
+        event_id=payload["event_id"],
+        created=payload["event_time"],
+        event_version=payload["event_version"],
+        producer=payload["producer"],
+        event_name=payload["event_name"],  # keep the event meta to scan events in db
+        payload=payload["payload"],  # dump the whole payload as json string no matter the schema
+    )
 
 
 class AnalyticsConsumer(Consumer):
@@ -85,12 +102,18 @@ class AnalyticsConsumer(Consumer):
             else:
                 print(f"ignoring message with key `{record_key}` and meta `{record_data}`")
 
+            # just put into the DB every event and let the data pipelines handle the rest
+            # (instead of DLQ mechanism for the sake of durability)
+            if record_data["event_name"] in TASKS_EVENTS:
+                log_record = ATaskLog.objects.create(**parse_payload_for_event_log(record_data))
+
+            elif record_data["event_name"] in BILLING_EVENTS:
+                log_record = ATransactionLog.objects.create(**parse_payload_for_event_log(record_data))
+
         except IntegrityError as e:
             print(f"seems already consumed event with key `{record_key}` and meta `{record_data}`")
 
         except Exception as e:
-            # TODO add DLQ for failed messages
-
             print(f"\n\t >>> ERROR processing message with key `{record_key}` and meta `{record_data}`\n\n {e}\n")
             raise e
 
@@ -98,9 +121,9 @@ class AnalyticsConsumer(Consumer):
 consumer = AnalyticsConsumer(group_id="analytics_consumer")
 consumer.subscribe(
     [
+        Topics.users_stream,
         Topics.tasks_stream,
         Topics.tasks,
-        Topics.users_stream,
         Topics.billing_tasks,
         Topics.billing_tx,
     ]
