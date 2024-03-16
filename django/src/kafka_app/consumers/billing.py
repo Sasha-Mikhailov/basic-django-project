@@ -1,9 +1,13 @@
 from django.db.utils import IntegrityError
 
+from app.settings import DEBUG
 from app.settings import Topics
 from billing.models import BillingTask
 from billing.models import BillingUser
 from kafka_app.consumer import Consumer
+from kafka_app.producer import Producer
+
+p = Producer()
 
 
 class BillingTaskConsumer(Consumer):
@@ -75,10 +79,23 @@ class BillingTaskConsumer(Consumer):
             print(f"seems already consumed event with key `{record_key}` and meta `{record_data}`")
 
         except Exception as e:
-            # TODO add DLQ for failed messages
+            # DLQ for failed messages
+            event_seen = record_data.get("event_seen_times", 0)
+            record_data.update(
+                {
+                    "event_seen_times": event_seen + 1,
+                    "last_error": str(e),
+                }
+            )
+            p.produce(topic=Topics.billing_dlq, key=record_data["event_id"], value=record_data)
+            # TODO add DLQ consumer logic (somewhere?)
 
-            print(f"\n\t >>> ERROR processing message with key `{record_key}` and meta `{record_data}`\n\n {e}\n")
-            raise e
+            if DEBUG:
+                print(f"\n\t >>> ERROR processing message with key `{record_key}` and meta `{record_data}`\n\n {e}\n")
+                raise e
+            else:
+                # ACK the message to avoid re-processing
+                self.commit()
 
 
 consumer = BillingTaskConsumer(group_id="billing_consumer")
