@@ -43,3 +43,10 @@ migrate: migrations
 
 run:
 	cd src && ./manage.py runserver
+
+shell:
+	cd src && ./manage.py shell
+
+topic = ''
+clear-topic:
+	docker exec broker /bin/kafka-topics --bootstrap-server 'localhost:9092' --delete --topic ${topic}

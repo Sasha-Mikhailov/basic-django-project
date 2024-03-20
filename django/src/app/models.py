@@ -18,6 +18,10 @@ class DefaultModel(models.Model):
 
     def __str__(self) -> str:
         """Default name for all models"""
+        public_id = getattr(self, "public_id", None)
+        if public_id is not None:
+            return str(public_id)
+
         name = getattr(self, "name", None)
         if name is not None:
             return str(name)
@@ -52,3 +56,21 @@ class TimestampedModel(DefaultModel, Timestamped):
 
     class Meta:
         abstract = True
+
+
+class EventLogModel(DefaultModel, Timestamped):
+    """
+    default model for event logs to keep every event in the system no matter the payload schema
+    """
+
+    class Meta:
+        abstract = True
+
+    # keep the event meta to scan events in db
+    event_id = models.UUIDField(blank=False, null=False)
+    event_version = models.TextField(null=True)
+    event_name = models.TextField(null=True)
+    producer = models.TextField(null=True)
+
+    # dump the whole payload as json string no matter the schema
+    payload = models.JSONField()

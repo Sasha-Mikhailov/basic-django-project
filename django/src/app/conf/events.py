@@ -14,8 +14,15 @@ class Topics:
     tasks_stream = "tasks-stream"
     # tasks: business events
     tasks = "tasks"
+    tasks_dlq = "tasks-dlq"
 
     # users: CUD events
     users_stream = "users-stream"
     # users: business events
     users = "users"
+
+    # billing: transactions CUD events
+    billing_tx = "billing-tx"
+    # billing: tasks CUD events (with costs)
+    billing_tasks = "billing-tasks"
+    billing_dlq = "billing-dlq"

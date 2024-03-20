@@ -1,14 +1,14 @@
+from datetime import datetime
 import uuid
 
 from rest_framework import serializers
 
 from app.settings import Topics
-
+from kafka_app.producer import Producer
 from users.models import User
-from tasks.producer import Producer
-
 
 p = Producer()
+
 
 class UserSerializer(serializers.ModelSerializer):
     remote_addr = serializers.SerializerMethodField()
@@ -35,53 +35,63 @@ class UserSerializer(serializers.ModelSerializer):
         user = User.objects.create_user(**validated_data)
 
         event = {
-            "event_id": uuid.uuid4(),
-            # TODO add version, name, time, producer
+            "event_id": str(uuid.uuid4()),
+            "event_version": "1",
+            "event_name": "users.user-created",
+            "event_time": datetime.now().isoformat(),
+            "producer": "users-service",
             "payload": {
                 "public_id": str(user.public_id),
+                "created": str(user.date_joined),
                 "username": str(user.username),
                 "first_name": str(user.first_name),
                 "last_name": str(user.last_name),
                 "user_role": str(user.role),
             },
         }
-        p.produce(Topics.users_stream, 'users.user-created', event)
+        p.produce(topic=Topics.users_stream, key=event["event_id"], value=event)
 
         return user
 
     def update(self, instance, validated_data):
         old_role = instance.role
-        new_role = validated_data.get('role', old_role)
+        new_role = validated_data.get("role", old_role)
 
         super().update(instance, validated_data)
         user = User.update_or_create(**instance.data)
 
         # TODO think about bulk update
         event = {
-            "event_id": uuid.uuid4(),
-            # TODO add version, name, time, producer
+            "event_id": str(uuid.uuid4()),
+            "event_version": "1",
+            "event_name": "users.user-updated",
+            "event_time": datetime.now().isoformat(),
+            "producer": "users-service",
             "payload": {
-                # TODO send only changed fields?
                 "public_id": str(user.public_id),
+                "created": str(user.date_joined),
                 "username": str(user.username),
                 "first_name": str(user.first_name),
                 "last_name": str(user.last_name),
                 "user_role": str(user.role),
             },
         }
-        p.produce(Topics.users_stream, 'users.user-updated', event)
+        p.produce(topic=Topics.users_stream, key=event["event_id"], value=event)
         # print(validated_data)
 
         if old_role != new_role:
             event = {
-                "event_id": uuid.uuid4(),
-                # TODO add version, name, time, producer
+                "event_id": str(uuid.uuid4()),
+                "event_version": "1",
+                "event_name": "users.user-role-changed",
+                "event_time": datetime.now().isoformat(),
+                "producer": "users-service",
                 "payload": {
                     "public_id": str(user.public_id),
                     "old_user_role": str(old_role),
                     "new_user_role": str(new_role),
                 },
             }
-            p.produce(Topics.users, 'users.user-role-changed', instance.data)
+            p.produce(topic=Topics.users, key=event["event_id"], value=event)
 
         return user

@@ -5,6 +5,9 @@ APPS = [
     "a12n",
     "users",
     "tasks",
+    "billing",
+    "analytics",
+    "kafka_app",
 ]
 
 THIRD_PARTY_APPS = [
